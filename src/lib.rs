@@ -18,8 +18,10 @@ use std::collections::hash_map::{HashMap,Hasher};
 use std::num::{ToPrimitive,FromPrimitive}; // and regret it
 use std::hash::Hash;
 
+pub use primes::{PrimeSieve,PrimeTester};
 pub use factorization::Factorization;
 
+mod primes;
 mod factorization;
 
 /// A relatively compact way to store the factorizations of all numbers up to a limit.
