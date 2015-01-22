@@ -1,0 +1,8 @@
+[package]
+
+name = "factor"
+version = "0.0.1"
+authors = ["Michael Lamparski <me@this.isnt.really.my.email.org>"]
+
+[dependencies]
+num = "*"
