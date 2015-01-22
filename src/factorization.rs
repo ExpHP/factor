@@ -28,6 +28,19 @@ pub struct Factorization<K>
 	powers: HashMap<K, usize>,
 }
 
+// TODO: some of Factorization's methods need to be special cased for Zero
+
+// TODO: While Factorization is intended to only store prime numbers (and zero)
+//        as factors, it will currently accept anything.
+//
+//       Some alternatives under consideration:
+//         * a Prime data type (possibly one form of a "known primality" enum
+//             type) for keys
+//         * allow non-prime keys.  The issue with this is that many of the
+//           math methods (gcd, totient, etc.) are only worth implementing
+//           for the all-prime case, and the user would have to be trusted to
+//           use them responsibly.
+
 // NOTE: ToPrimitive and FromPrimitive are unstable, and are currently included
 //  in case I feel compelled to make a FactorTree using BigInt
 impl<K> Factorization<K>
@@ -48,7 +61,6 @@ impl<K> Factorization<K>
 		}
 	}
 
-	// TODO: Make private
 	pub fn from_factor(factor: K) -> Self
 	{
 		let mut map = HashMap::new();
@@ -231,6 +243,8 @@ impl<K> Factorization<K>
 		result
 	}
 
+	// TODO: Reasonable (?) methods to implement
+	// pub fn is_multiple_of(self: &Self, other: &Self) -> bool
 }
 
 
