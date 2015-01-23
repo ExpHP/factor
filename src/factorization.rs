@@ -77,13 +77,9 @@ impl<K> Factorization<K>
 	/// # Example:
 	///
 	/// ```
-	/// use factor::Factorization;
-	/// use std::default::Default;
+	/// use factor::factorize;
 	///
-	/// let mut f: Factorization<u64> = Default::default();
-	/// f = f * Factorization::from_factor(2);
-	/// f = f * Factorization::from_factor(2);
-	/// f = f * Factorization::from_factor(5);
+	/// let f = factorize(20u64);
 	/// assert_eq!(f.product(), 20);
 	/// ```
 	pub fn product(self: &Self) -> K
@@ -102,13 +98,9 @@ impl<K> Factorization<K>
 	/// # Example:
 	///
 	/// ```
-	/// use factor::Factorization;
-	/// use std::default::Default;
+	/// use factor::factorize;
 	///
-	/// let mut f: Factorization<u64> = Default::default();
-	/// f = f * Factorization::from_factor(2);
-	/// f = f * Factorization::from_factor(2);
-	/// f = f * Factorization::from_factor(5);
+	/// let f = factorize(20u64);
 	/// assert_eq!(f.count_divisors(), 6);
 	/// ```
 	pub fn count_divisors(self: &Self) -> K
@@ -126,13 +118,9 @@ impl<K> Factorization<K>
 	/// # Example:
 	///
 	/// ```
-	/// use factor::Factorization;
-	/// use std::default::Default;
+	/// use factor::factorize;
 	///
-	/// let mut f: Factorization<u64> = Default::default();
-	/// f = f * Factorization::from_factor(2);
-	/// f = f * Factorization::from_factor(2);
-	/// f = f * Factorization::from_factor(5);
+	/// let f = factorize(20u64);
 	/// assert_eq!(f.sum_divisors(), 42);
 	/// ```
 	pub fn sum_divisors(self: &Self) -> K
@@ -152,13 +140,9 @@ impl<K> Factorization<K>
 	/// # Example:
 	///
 	/// ```
-	/// use factor::Factorization;
-	/// use std::default::Default;
+	/// use factor::factorize;
 	///
-	/// let mut f: Factorization<u64> = Default::default();
-	/// f = f * Factorization::from_factor(2);
-	/// f = f * Factorization::from_factor(2);
-	/// f = f * Factorization::from_factor(5);
+	/// let f = factorize(20u64);
 	/// assert_eq!(f.totient(), 8);
 	/// ```
 	pub fn totient(self: &Self) -> K
@@ -185,18 +169,13 @@ impl<K> Factorization<K>
 	/// # Example:
 	///
 	/// ```
-	/// use factor::Factorization;
-	/// use std::default::Default;
+	/// use factor::factorize;
 	///
-	/// let mut f: Factorization<u64> = Default::default();
-	/// f = f * Factorization::from_factor(2);
-	/// f = f * Factorization::from_factor(2);
-	/// f = f * Factorization::from_factor(5);
-	/// assert!(f.sqrt().is_none());  // 20: not square!
+	/// let mut f = factorize(20u64);
+	/// assert!(f.sqrt().is_none());    // 20 is not square!
 	/// 
-	/// f = f * Factorization::from_factor(5);
-	/// assert!(f.sqrt().is_some());  // 100: 10*10
-	/// assert_eq!(f.sqrt().unwrap().product(), 10);
+	/// f = f * factorize(5);
+	/// assert_eq!(f.sqrt().unwrap().product(), 10);  // sqrt(100)
 	/// ```
 	pub fn sqrt(self: &Self) -> Option<Self>
 	{

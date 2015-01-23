@@ -19,6 +19,16 @@ use num::{Zero, One, Integer};
 use util::isqrt;
 use factorization::Factorization;
 
+
+// Type-Synonyms, for semantic purposes.
+// (alas, re-exports don't appear to take docstrings)
+
+// /// A deterministic `Factorizer` that is guaranteed to work on any number, but may be fast.
+pub use TrialDivisionFactorizer as SafeFactorizer;
+// /// The `Factorizer` used by the `factor::factorize` method.
+pub use TrialDivisionFactorizer as DefaultFactorizer;
+
+
 //// XXX: Would reduce some of the pain in keeping impl type bounds consistent, but would also require the
 ////      trait to be explicitly implemented for all applicable types, which arguably sucks just as much.
 //// Master trait of traits needed to implement Factorization<T>
@@ -31,8 +41,9 @@ pub trait Factorizer<T>
 {
 	// TODO: Perhaps more sensible to return `1` for non-composite (so that division by the result
 	//       is safe without needing to check for zero)
-	/// Produces a single (not necessarily prime) factor of a number `x`.  Some Factorizers are
-	///  deterministic and always produce the same factor for the same `x`.
+	/// Produces a single (not necessarily prime) factor of a number `x`.  Some implementations of
+	///  `Factorizer` are deterministic and always produce the same factor for the same `x`, while
+	///  others may have an element of randomness.
 	///
 	/// However, all Factorizers are expected to meet the following guarantees:
 	///
@@ -43,8 +54,8 @@ pub trait Factorizer<T>
 	///  dividing `x` by the value.
 	fn get_factor(self: &Self, x: &T) -> T;
 
-	/// Builds a complete factorization of a number.  A default implementation is provided which
-	/// calls get_factor() recursively on the factors produced.
+	/// Builds a complete prime factorization of a number.  A default implementation is provided
+	///  which calls `get_factor()` recursively on the factors produced.
 	fn factorize(self: &Self, x: T) -> Factorization<T>
 	{
 		let a = self.get_factor(&x);
@@ -71,7 +82,7 @@ pub trait Factorizer<T>
 ///  when factoring small numbers (TODO: of what magnitude?). However, it has trouble on numbers
 ///  with large prime factors.
 pub struct TrialDivisionFactorizer<T>
- where T: Eq + Clone + FromPrimitive + ToPrimitive + Zero + One + Integer + Shr<usize, Output=T>
+ where T: Eq + Clone + FromPrimitive + ToPrimitive + Zero + One + Integer + Shr<usize, Output=T> + Hash<Hasher>
 ;
 
 
@@ -116,17 +127,17 @@ for TrialDivisionFactorizer<T>
 
 /// TODO
 pub struct FermatFactorizer<T>
- where T: Eq + Clone + FromPrimitive + ToPrimitive + Zero + One + Integer + Shr<usize, Output=T>
+ where T: Eq + Clone + FromPrimitive + ToPrimitive + Zero + One + Integer + Hash<Hasher>
 ;
 
 /// TODO
 pub struct DixonFactorizer<T>
- where T: Eq + Clone + FromPrimitive + ToPrimitive + Zero + One + Integer + Shr<usize, Output=T>
+ where T: Eq + Clone + FromPrimitive + ToPrimitive + Zero + One + Integer + Hash<Hasher>
 ;
 
 /// TODO
 pub struct GeneralFactorizer<T>
- where T: Eq + Clone + FromPrimitive + ToPrimitive + Zero + One + Integer + Shr<usize, Output=T>
+ where T: Eq + Clone + FromPrimitive + ToPrimitive + Zero + One + Integer + Hash<Hasher>
 ;
 
 /// Factors numbers by using results cached from another `Factorizer`.
@@ -163,16 +174,6 @@ for FactorStore<T>
 		self.factors[x.to_uint().unwrap()].clone()
 	}
 }
-
-
-
-// Type synonyms
-
-/// A deterministic `Factorizer` that is guaranteed to work on any number, but may be fast.
-pub type SafeFactorizer<T> = TrialDivisionFactorizer<T>;
-
-/// The `Factorizer` used by the `factor::factorize` method.
-pub type DefaultFactorizer<T> = TrialDivisionFactorizer<T>;
 
 
 // Tests
