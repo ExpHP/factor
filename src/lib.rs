@@ -13,6 +13,7 @@
 #![allow(unused_imports)]
 
 extern crate num;
+extern crate test;
 
 use std::collections::hash_map::{HashMap,Hasher};
 use std::num::{ToPrimitive,FromPrimitive}; // and regret it
@@ -23,6 +24,7 @@ pub use factorization::Factorization;
 
 mod primes;
 mod factorization;
+mod util;
 
 /// A relatively compact way to store the factorizations of all numbers up to a limit.
 /// Only a single non-trivial factor is stored for each composite number, from which
@@ -33,6 +35,38 @@ mod factorization;
 pub struct FactorTree<T> {
 	factors: Vec<T>,
 }
+
+/// A deterministic factorizer that is guaranteed to produce a factor for any number,
+///  but which may not be the fastest thing out there.
+//type SafeFactorizer<T> = TrialDivisionFactorizer<T>;
+
+/*
+pub struct TrialDivisionFactorizer<T>
+{
+
+}
+
+impl<T> TrialDivisionFactorizer<T>
+{
+	fn get_factor(self: &Self, x: &T) -> T
+	{
+		if x.is_zero() { return Zero::zero() };
+
+		// incredibly minor optimization that people would nonetheless complain about
+		//  if it wasn't there
+		if x.is_even() { return FromPrimitive::from_uint(2us).unwrap; }
+
+		let stop = x.to_f64
+		for odd_candidate in range_step(3us, x.to_uint().unwrap(), 2) {
+
+		}
+	}
+}
+
+pub struct FermatFactorizer<T> {
+
+}
+*/
 
 // TODO: Test on bigint
 
