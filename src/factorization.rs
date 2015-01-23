@@ -72,7 +72,7 @@ impl<K> Factorization<K>
 	// TODO: Make doctests less tedious-looking by using something like
 	//        factorize(20), once such a function exists.
 
-	/// The integer represented by this Factorization.
+	/// Compute the integer represented by the `Factorization`.
 	///
 	/// # Example:
 	///
@@ -95,9 +95,9 @@ impl<K> Factorization<K>
 		result
 	}
 
-	/// The total number of positive integers which evenly divide
-	///  the number represented by the Factorization (including 1
-	///  and the number itself).
+	/// Compute the total number of positive integers which evenly divide
+	///  the number represented by the `Factorization` (including 1 and the
+	///  number itself).
 	///
 	/// # Example:
 	///
@@ -120,9 +120,8 @@ impl<K> Factorization<K>
 		result
 	}
 
-	/// The sum of all positive integers which evenly divide
-	///  the number represented by the Factorization (including 1
-	///  and the number itself).
+	/// Compute the sum of all positive integers which evenly divide the number
+	///  represented by the `Factorization` (including 1 and the number itself).
 	///
 	/// # Example:
 	///
@@ -147,7 +146,7 @@ impl<K> Factorization<K>
 		result
 	}
 
-	/// Euler totient function $\varphi(x)$, the total number of
+	/// Compute the Euler totient `phi(x)`, the total number of
 	///  positive integers less than `x` that are coprime to `x`.
 	///
 	/// # Example:
@@ -177,6 +176,11 @@ impl<K> Factorization<K>
 
 	// TODO: Docs
 	// Returns None if any factors have odd powers
+	/// Get the square root.
+	///
+	/// If the `Factorization` represents a perfect square, returns
+	///  a `Some(Factorization)` representing the square root.
+	///  Otherwise, returns `None`.
 	///
 	/// # Example:
 	///

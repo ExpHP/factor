@@ -24,16 +24,27 @@ use factorization::Factorization;
 //// Master trait of traits needed to implement Factorization<T>
 //trait Factorable: Eq + Clone + Hash<Hasher> + ToPrimitive + FromPrimitive + num::Integer { }
 
-/// An object which can produce a single factor or a complete Factorization object
-///  for any given number.
-///
+
+/// An interface for factorizing positive integers.
 pub trait Factorizer<T>
  where T: Eq + Clone + FromPrimitive + ToPrimitive + Zero + One + Integer + Hash<Hasher>
 {
-	/// `get_factor(x)` for any non-composite `x` (0, 1, or primes) should return `x`.
-	/// `get_factor(x)` for any composite `x` will produce an arbitrary but non-trivial factor of `x`.
+	// TODO: Perhaps more sensible to return `1` for non-composite (so that division by the result
+	//       is safe without needing to check for zero)
+	/// Produces a single (not necessarily prime) factor of a number `x`.  Some Factorizers are
+	///  deterministic and always produce the same factor for the same `x`.
+	///
+	/// However, all Factorizers are expected to meet the following guarantees:
+	///
+	/// * `get_factor(x)` for any non-composite `x` (0, 1, or primes) returns `x`.
+	/// * `get_factor(x)` for any composite `x` produces an arbitrary but non-trivial factor of `x`.
+	/// 
+	/// Keep in mind that, in addition to the value returned, another factor can be obtained by
+	///  dividing `x` by the value.
 	fn get_factor(self: &Self, x: &T) -> T;
 
+	/// Builds a complete factorization of a number.  A default implementation is provided which
+	/// calls get_factor() recursively on the factors produced.
 	fn factorize(self: &Self, x: T) -> Factorization<T>
 	{
 		let a = self.get_factor(&x);
@@ -50,10 +61,15 @@ pub trait Factorizer<T>
 	}
 }
 
-/// A deterministic factorizer that is guaranteed to produce a factor for any number,
-///  but which may not be the fastest thing out there.
-//type SafeFactorizer<T> = TrialDivisionFactorizer<T>;
-
+/// Factors numbers using trial division.
+///
+/// Trial division is one of the most inefficient, yet most easily understood methods for
+///  factorizing numbers.  `TrialDivisionFactorizer` tries dividing a number by successively
+///  larger numbers until it encounters one that leaves a remainder of zero.
+///
+/// Despite its primitive nature, it can well outperform many of the more sophisticated methods
+///  when factoring small numbers (TODO: of what magnitude?). However, it has trouble on numbers
+///  with large prime factors.
 pub struct TrialDivisionFactorizer<T>
  where T: Eq + Clone + FromPrimitive + ToPrimitive + Zero + One + Integer + Shr<usize, Output=T>
 ;
@@ -63,6 +79,11 @@ impl<T> Factorizer<T>
 for TrialDivisionFactorizer<T>
  where T: Eq + Clone + FromPrimitive + ToPrimitive + Zero + One + Integer + Shr<usize, Output=T> + Hash<Hasher>,
 {
+	/// Produce a single factor of `x`.  TrialDivisionFactorizer is deterministic,
+	///  and will always produce the smallest non-trivial factor of any composite number.
+	///  Thus, the number it returns is also always prime.
+	///
+	/// The runtime scales linearly with the size of the smallest factor of `x`.
 	fn get_factor(self: &Self, x: &T) -> T
 	{
 		// If you're reading this:
@@ -88,48 +109,73 @@ for TrialDivisionFactorizer<T>
 		// x is prime
 		return x.clone();
 	}
+
+	// TODO: The default recursive algorithm for factorize() is poorly suited
+	//       to this Factorizer, and should be overriden.
 }
 
+/// TODO
 pub struct FermatFactorizer<T>
  where T: Eq + Clone + FromPrimitive + ToPrimitive + Zero + One + Integer + Shr<usize, Output=T>
 ;
 
-/// A relatively compact way to store the factorizations of all numbers up to a limit.
+/// TODO
+pub struct DixonFactorizer<T>
+ where T: Eq + Clone + FromPrimitive + ToPrimitive + Zero + One + Integer + Shr<usize, Output=T>
+;
+
+/// TODO
+pub struct GeneralFactorizer<T>
+ where T: Eq + Clone + FromPrimitive + ToPrimitive + Zero + One + Integer + Shr<usize, Output=T>
+;
+
+/// Factors numbers by using results cached from another `Factorizer`.
+///
+/// A `Factorizer` which stores factors produced by another `Factorizer` for quick lookup.
 /// Only a single non-trivial factor is stored for each composite number, from which
 ///  the full decomposition can be gathered recursively.
-///
-/// TODO: Despite the name, not strictly a tree
 #[derive(Clone, Show)]
-pub struct FactorTree<T> {
+pub struct FactorStore<T> {
+	// I wanted to call it FactorTree but it's really a DAG.  x_x
+
 	factors: Vec<T>,
 }
 
-impl<T> FactorTree<T>
+impl<T> FactorStore<T>
  where T: Eq + Clone + Hash<Hasher> + ToPrimitive + FromPrimitive + Integer
 {
 //	// construction method?
 //	fn new(n: T, factorizer: Fn(T) -> T) { }
+}
 
-	/// Returns a single factor (not necessarily prime) for a number.  The same FactorTree
-	/// will always produce the same factor for the same x, though different trees may
-	/// produce different factors, depending on their construction.
+impl<T> Factorizer<T>
+for FactorStore<T>
+ where T: Eq + Clone + Hash<Hasher> + ToPrimitive + FromPrimitive + Zero + One + Integer + Shr<usize, Output=T>,
+{
+	/// Produces the factor stored for `x`.
 	///
 	/// # Panics
 	///
-	/// Panics if the index exceeds the maximum number 
-	///
-	/// FIXME TODO DERP DOCZ
-	///
-	/// get_factor(x) for any non-composite `x` (0, 1, or primes) will return `x`.
-	/// get_factor(x) for any composite `x` will produce an arbitrary but non-trivial factor of `x`.
-	///
-	/// FIXME TODO DERP DOCZ
+	/// May panic. (TODO: When?)
 	#[inline]
 	fn get_factor(self: &Self, x: &T) -> T
 	{
 		self.factors[x.to_uint().unwrap()].clone()
 	}
 }
+
+
+
+// Type synonyms
+
+/// A deterministic `Factorizer` that is guaranteed to work on any number, but may be fast.
+pub type SafeFactorizer<T> = TrialDivisionFactorizer<T>;
+
+/// The `Factorizer` used by the `factor::factorize` method.
+pub type DefaultFactorizer<T> = TrialDivisionFactorizer<T>;
+
+
+// Tests
 
 #[cfg(test)]
 mod tests {
