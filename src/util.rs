@@ -52,6 +52,8 @@ fn isqrt_fast<T>(x: T) -> Option<T>
 fn isqrt_safe<T>(n: T) -> T
  where T: Clone + FromPrimitive + ToPrimitive + Zero + One + Integer + Shr<usize, Output=T>,
 {
+	// NOTE: while I'd like to remove the Shr bound, replacing '>> 1' with '/ 2' makes this
+	//       algorithm take twice as long for BigInts :/
 	if n.is_zero() { return Zero::zero(); }
 	let mut x = n.clone();
 	let mut y = (x.clone() + n.clone() / x.clone()) >> One::one();
@@ -73,6 +75,25 @@ fn bench_fast(b: &mut Bencher) {
 fn bench_safe(b: &mut Bencher) {
 	b.iter(|| {
 		range(0us, 1000us).map(isqrt_safe::<usize>).collect::<Vec<usize>>()
+	})
+}
+
+#[bench]
+fn bench_safe_bigint(b: &mut Bencher) {
+	b.iter(|| {
+		range(0us, 1000us).map(|a| isqrt_safe::<BigUint>(FromPrimitive::from_uint(a).unwrap())).collect::<Vec<BigUint>>()
+	})
+}
+
+#[bench]
+fn bench_safe_massive_bigint(b: &mut Bencher) {
+	use std::rand::XorShiftRng;
+	use num::bigint::RandBigInt;
+	let mut r = XorShiftRng::new_unseeded();
+	b.iter(|| {
+		range(0us, 100us).map(|_| {
+			isqrt_safe::<BigUint>(r.gen_biguint(100us))
+		}).collect::<Vec<BigUint>>()
 	})
 }
 
