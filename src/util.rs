@@ -1,3 +1,10 @@
+// Copyright 2015 Michael 'ExpHP' Lamparski
+//
+// Licensed under the terms of the MIT License, available at:
+//  http://opensource.org/licenses/MIT
+// and also included in the file COPYING at the root of this distribution.
+// This file may not be copied, modified, or distributed except according
+// to those terms.
 
 extern crate num;
 extern crate test;
