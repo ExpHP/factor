@@ -20,12 +20,14 @@ pub use primes::PrimeSieve;
 pub use factorizer::Factorizer;
 pub use factorizer::TrialDivisionFactorizer;
 //pub use factorizer::FermatFactorizer;
-//pub use factorizer::DixonFactorizer;
+pub use factorizer_dixon::DixonFactorizer;
 //pub use factorizer::GeneralFactorizer;
 pub use factorizer::SafeFactorizer;
 pub use factorizer::DefaultFactorizer;
 pub use factorizer::FactorStore;
 pub use factorization::Factorization;
+pub use util::isqrt;
+pub use util::gcd;
 
 use std::collections::hash_map::{HashMap,Hasher};
 use std::num::{ToPrimitive,FromPrimitive};
@@ -37,6 +39,7 @@ use num::{Zero,One,Integer};
 mod primes;
 mod factorization;
 mod factorizer;
+mod factorizer_dixon;
 mod util;
 
 

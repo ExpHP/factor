@@ -21,6 +21,18 @@ use std::num::Float;
 
 use test::Bencher;
 
+/// Computes the greatest common divisor of two numbers using Euclid's method.
+/// Behavior unspecified for negative numbers.
+pub fn gcd<T>(a: T,  b: T) -> T
+ where T: Clone + Zero + Integer,
+{
+	if (a == Zero::zero()) {
+		b
+	} else {
+		gcd(b % a.clone(), a)
+	}
+}
+
 /// Performs an integer square root, returning the largest integer whose square is not
 ///  greater than the argument.
 pub fn isqrt<T>(n: T) -> T

@@ -19,7 +19,7 @@ use num::{Zero,One,Integer};
 
 
 /// TODO
-#[derive(Show,Clone)]
+#[derive(Eq,PartialEq,Show,Clone)]
 pub struct Factorization<K>
  where K: Eq + Clone + Hash<Hasher> + ToPrimitive + FromPrimitive + num::Integer,
 {

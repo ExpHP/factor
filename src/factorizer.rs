@@ -13,12 +13,12 @@ use std::collections::hash_map::{HashMap,Hasher};
 use std::num::{ToPrimitive,FromPrimitive}; // and regret it
 use std::hash::Hash;
 use std::ops::{Shr,Rem};
+use std::default::Default;
 
 use num::{Zero, One, Integer};
 
 use util::isqrt;
 use factorization::Factorization;
-
 
 // Type-Synonyms, for semantic purposes.
 // (alas, re-exports don't appear to take docstrings)
@@ -28,6 +28,7 @@ pub use TrialDivisionFactorizer as SafeFactorizer;
 // /// The `Factorizer` used by the `factor::factorize` method.
 pub use TrialDivisionFactorizer as DefaultFactorizer;
 
+pub use factorizer_dixon::DixonFactorizer;
 
 //// XXX: Would reduce some of the pain in keeping impl type bounds consistent, but would also require the
 ////      trait to be explicitly implemented for all applicable types, which arguably sucks just as much.
@@ -58,6 +59,10 @@ pub trait Factorizer<T>
 	///  which calls `get_factor()` recursively on the factors produced.
 	fn factorize(self: &Self, x: T) -> Factorization<T>
 	{
+		if x == One::one() {
+			return Default::default();
+		}
+
 		let a = self.get_factor(&x);
 
 		// Non-composite point to themselves
@@ -131,11 +136,6 @@ pub struct FermatFactorizer<T>
 ;
 
 /// TODO
-pub struct DixonFactorizer<T>
- where T: Eq + Clone + FromPrimitive + ToPrimitive + Zero + One + Integer + Hash<Hasher>
-;
-
-/// TODO
 pub struct GeneralFactorizer<T>
  where T: Eq + Clone + FromPrimitive + ToPrimitive + Zero + One + Integer + Hash<Hasher>
 ;
@@ -145,7 +145,7 @@ pub struct GeneralFactorizer<T>
 /// A `Factorizer` which stores factors produced by another `Factorizer` for quick lookup.
 /// Only a single non-trivial factor is stored for each composite number, from which
 ///  the full decomposition can be gathered recursively.
-#[derive(Clone, Show)]
+#[derive(Clone, Debug)]
 pub struct FactorStore<T> {
 	// I wanted to call it FactorTree but it's really a DAG.  x_x
 
@@ -181,19 +181,21 @@ for FactorStore<T>
 #[cfg(test)]
 mod tests {
 	extern crate test;
+
 	use super::*;
+
 	use test::Bencher;
 	use std::collections::hash_map::{HashMap,Hasher};
 	use std::num::{ToPrimitive,FromPrimitive}; // and regret it
 	use std::hash::Hash;
-	use std::fmt::Show;
+	use std::fmt::Debug;
 
 	use num::{BigUint, BigInt};
 	use num::{Zero, One, Integer};
 
 	//  A simple test to factorize 242 as an arbitrary data type using an arbitrary factorizer.
 	fn test_242<T, U>(factorizer: U)
-	 where T: Eq + Clone + Show + Hash<Hasher> + ToPrimitive + FromPrimitive + Integer,
+	 where T: Eq + Clone + Debug + Hash<Hasher> + ToPrimitive + FromPrimitive + Integer,
 	       U: Factorizer<T>,
 	{
 		// 242 = 2 * 11 * 11
@@ -231,5 +233,6 @@ mod tests {
 		test_242::<BigInt,_>(TrialDivisionFactorizer);
 
 		// TODO: Test other factorizers here when they exist
+		test_242::<u64,_>(DixonFactorizer::new(vec![2,3,5]));
 	}
 }
