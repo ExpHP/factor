@@ -89,21 +89,21 @@ fn isqrt_safe<T>(n: T) -> T
 #[bench]
 fn bench_fast(b: &mut Bencher) {
 	b.iter(|| {
-		range(0us, 1000us).map(|a| {isqrt_fast::<usize>(a).unwrap()}).collect::<Vec<usize>>()
+		(0us..1000us).map(|a| {isqrt_fast::<usize>(a).unwrap()}).collect::<Vec<usize>>()
 	})
 }
 
 #[bench]
 fn bench_safe(b: &mut Bencher) {
 	b.iter(|| {
-		range(0us, 1000us).map(isqrt_safe::<usize>).collect::<Vec<usize>>()
+		(0us..1000us).map(isqrt_safe::<usize>).collect::<Vec<usize>>()
 	})
 }
 
 #[bench]
 fn bench_safe_bigint(b: &mut Bencher) {
 	b.iter(|| {
-		range(0us, 1000us).map(|a| isqrt_safe::<BigUint>(FromPrimitive::from_uint(a).unwrap())).collect::<Vec<BigUint>>()
+		(0us..1000us).map(|a| isqrt_safe::<BigUint>(FromPrimitive::from_uint(a).unwrap())).collect::<Vec<BigUint>>()
 	})
 }
 
@@ -113,7 +113,7 @@ fn bench_safe_massive_bigint(b: &mut Bencher) {
 	use num::bigint::RandBigInt;
 	let mut r = XorShiftRng::new_unseeded();
 	b.iter(|| {
-		range(0us, 100us).map(|_| {
+		(0us..100us).map(|_| {
 			isqrt_safe::<BigUint>(r.gen_biguint(100us))
 		}).collect::<Vec<BigUint>>()
 	})
