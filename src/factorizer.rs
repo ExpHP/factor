@@ -102,9 +102,6 @@ for TrialDivisionFactorizer<T>
 	/// The runtime scales linearly with the size of the smallest factor of `x`.
 	fn get_factor(self: &Self, x: &T) -> T
 	{
-		// If you're reading this:
-		//       I'm sorry.
-
 		if x.is_zero() { return Zero::zero() };
 
 		if x.is_even() { return literal(2); }

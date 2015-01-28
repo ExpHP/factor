@@ -35,7 +35,7 @@ pub fn gcd<T>(a: T,  b: T) -> T
 /// Performs an integer square root, returning the largest integer whose square is not
 ///  greater than the argument.
 pub fn isqrt<T>(n: T) -> T
- where T: Clone + FromPrimitive + ToPrimitive + Zero + One + Integer + Shr<usize, Output=T>,
+ where T: Clone + FromPrimitive + ToPrimitive + Zero + Integer + Shr<usize, Output=T>,
 {
 	isqrt_fast(n.clone()).or_else(
 		|| Some(isqrt_safe(n.clone()))
@@ -71,7 +71,7 @@ fn isqrt_fast<T>(x: T) -> Option<T>
 }
 
 fn isqrt_safe<T>(n: T) -> T
- where T: Clone + FromPrimitive + ToPrimitive + Zero + One + Integer + Shr<usize, Output=T>,
+ where T: Clone + FromPrimitive + ToPrimitive + Zero + Integer + Shr<usize, Output=T>,
 {
 	// NOTE: while I'd like to remove the Shr bound, replacing '>> 1' with '/ 2' makes this
 	//       algorithm take twice as long for BigInts :/

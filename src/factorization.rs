@@ -21,7 +21,7 @@ use num::{Zero,One,Integer};
 /// TODO
 #[derive(Eq,PartialEq,Show,Clone)]
 pub struct Factorization<K>
- where K: Eq + Clone + Hash<Hasher> + ToPrimitive + FromPrimitive + num::Integer,
+ where K: Eq + Clone + ToPrimitive + FromPrimitive + Integer + Hash<Hasher>,
 {
 	// powers are currently usize for consistency with the pow() functions
 	//  in both std::num and the num crate.
@@ -44,7 +44,7 @@ pub struct Factorization<K>
 // NOTE: ToPrimitive and FromPrimitive are unstable, and are currently included
 //  in case I feel compelled to make a FactorTree using BigInt
 impl<K> Factorization<K>
- where K: Eq + Clone + Hash<Hasher> + ToPrimitive + FromPrimitive + num::Integer,
+ where K: Eq + Clone + ToPrimitive + FromPrimitive + Integer + Hash<Hasher>,
 {
 
 	pub fn set(self: &mut Self, key: K, pwr: usize) {
@@ -233,7 +233,7 @@ impl<K> Factorization<K>
 
 impl<K> One
 for Factorization<K>
- where K: Eq + Clone + Hash<Hasher> + ToPrimitive + FromPrimitive + num::Integer,
+ where K: Eq + Clone + Hash<Hasher> + ToPrimitive + FromPrimitive + Integer,
 {
 	/// Creates a Factorization representing `1`.
 	fn one() -> Self
@@ -243,7 +243,7 @@ for Factorization<K>
 
 impl<K> Default
 for Factorization<K>
- where K: Eq + Clone + Hash<Hasher> + ToPrimitive + FromPrimitive + num::Integer,
+ where K: Eq + Clone + Hash<Hasher> + ToPrimitive + FromPrimitive + Integer,
 {
 	/// Creates a Factorization representing `1`.
 	fn default() -> Self
@@ -252,7 +252,7 @@ for Factorization<K>
 
 
 impl<K> Mul<Self> for Factorization<K>
- where K: Eq + Clone + Hash<Hasher> + ToPrimitive + FromPrimitive + num::Integer,
+ where K: Eq + Clone + Hash<Hasher> + ToPrimitive + FromPrimitive + Integer,
 {
 	type Output = Self;
 	fn mul(self: Self, other: Self) -> Self
