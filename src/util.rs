@@ -126,7 +126,7 @@ fn test_isqrt_consistency()
 		let bigX = x.to_biguint().unwrap();
 		assert_eq!(isqrt_fast(x),            Some(isqrt_safe(x)));
 		assert_eq!(isqrt_fast(bigX.clone()), Some(isqrt_safe(bigX.clone())));
-	});
+	}).collect::<Vec<_>>();
 }
 
 #[cfg(test)]
