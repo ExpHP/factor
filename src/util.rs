@@ -10,7 +10,6 @@ extern crate num;
 extern crate test;
 
 use std::collections::hash_map::{HashMap,Hasher};
-use std::default::Default;
 use std::num::{ToPrimitive,FromPrimitive}; // and regret it
 use std::hash::Hash;
 use std::ops::Shr;

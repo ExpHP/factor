@@ -8,7 +8,6 @@
 
 extern crate num;
 
-use std::default::Default;
 use std::num::{ToPrimitive,FromPrimitive}; // and regret it
 use std::iter::range_step;
 

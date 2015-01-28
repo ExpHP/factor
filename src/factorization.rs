@@ -209,7 +209,7 @@ impl<K> Factorization<K>
 			return self.gcd(other);
 		};
 
-		let mut result: Self = Default::default();
+		let mut result: Self = One::one();
 		for (k,v) in other.powers.clone().into_iter() {
 			result.set(k.clone(), min(self.get(&k), v));
 		};
@@ -231,13 +231,23 @@ impl<K> Factorization<K>
 }
 
 
+impl<K> One
+for Factorization<K>
+ where K: Eq + Clone + Hash<Hasher> + ToPrimitive + FromPrimitive + num::Integer,
+{
+	/// Creates a Factorization representing `1`.
+	fn one() -> Self
+	{ Factorization { powers: HashMap::new() } }
+}
+
+
 impl<K> Default
 for Factorization<K>
  where K: Eq + Clone + Hash<Hasher> + ToPrimitive + FromPrimitive + num::Integer,
 {
-	/// Creates a Factorization representing 1.
+	/// Creates a Factorization representing `1`.
 	fn default() -> Self
-	{ Factorization { powers: HashMap::new() } }
+	{ One::one() }
 }
 
 

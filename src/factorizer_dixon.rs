@@ -11,7 +11,6 @@ extern crate test;
 
 use std::collections::hash_map::{HashMap,Hasher};
 use std::collections::{Bitv,BitvSet};
-use std::default::Default;
 use std::num::{ToPrimitive,FromPrimitive}; // and regret it
 use std::hash::Hash;
 use std::ops::{Shr,Rem};
@@ -124,7 +123,7 @@ for DixonFactorizer<T>
 			if matrix_row.is_all_zero() {
 
 				let mut a_prod: T = One::one();
-				let mut b_prod_factors: Factorization<T> = Default::default();
+				let mut b_prod_factors: Factorization<T> = One::one();
 
 				for index in matrix_row.into_index_set().iter() {
 					a_prod = a_prod * a_values[index].clone();
@@ -157,7 +156,7 @@ fn factorize_limited<T>(x: T, primes: &Vec<T>) -> Option<Factorization<T>>
 {
 	assert!(!x.is_zero());
 
-	let mut f: Factorization<T> = Default::default();
+	let mut f: Factorization<T> = One::one();
 	let mut c = x;
 	for p in primes.iter() {
 

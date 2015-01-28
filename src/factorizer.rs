@@ -13,7 +13,6 @@ use std::collections::hash_map::{HashMap,Hasher};
 use std::num::{ToPrimitive,FromPrimitive}; // and regret it
 use std::hash::Hash;
 use std::ops::{Shr,Rem};
-use std::default::Default;
 
 use num::{Zero, One, Integer};
 
@@ -61,7 +60,7 @@ pub trait Factorizer<T>
 	fn factorize(self: &Self, x: T) -> Factorization<T>
 	{
 		if x == One::one() {
-			return Default::default();
+			return One::one();
 		}
 
 		let a = self.get_factor(&x);
