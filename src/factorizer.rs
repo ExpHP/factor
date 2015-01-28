@@ -18,6 +18,7 @@ use std::default::Default;
 use num::{Zero, One, Integer};
 
 use util::isqrt;
+use util::literal;
 use factorization::Factorization;
 
 // Type-Synonyms, for semantic purposes.
@@ -107,11 +108,11 @@ for TrialDivisionFactorizer<T>
 
 		if x.is_zero() { return Zero::zero() };
 
-		if x.is_even() { return FromPrimitive::from_uint(2).unwrap(); }
+		if x.is_even() { return literal(2); }
 
-		let start: T = FromPrimitive::from_uint(3).unwrap();
-		let stop:  T = isqrt(x.clone()) + FromPrimitive::from_uint(2).unwrap();
-		let step:  T = FromPrimitive::from_uint(2).unwrap();
+		let start: T = literal(3);
+		let stop:  T = isqrt(x.clone()) + literal(2);
+		let step:  T = literal(2);
 		
 		//for odd in range_step(start, stop, step)  // needs trait Int
 		let mut odd = start;
@@ -193,13 +194,15 @@ mod tests {
 	use num::{BigUint, BigInt};
 	use num::{Zero, One, Integer};
 
+	use util::literal;
+
 	//  A simple test to factorize 242 as an arbitrary data type using an arbitrary factorizer.
 	fn test_242<T, U>(factorizer: U)
 	 where T: Eq + Clone + Debug + Hash<Hasher> + ToPrimitive + FromPrimitive + Integer,
 	       U: Factorizer<T>,
 	{
 		// 242 = 2 * 11 * 11
-		let x_t: T = FromPrimitive::from_uint(242).unwrap();
+		let x_t: T = literal(242);
 
 		let factors = factorizer.factorize(x_t.clone());
 

@@ -43,6 +43,16 @@ pub fn isqrt<T>(n: T) -> T
 	).unwrap()
 }
 
+/// Used to convert an integral literal into an arbitrary type.
+/// For zero and one, `num::Zero::zero()` and `num::One::one()` is preferred when they
+///  are used as the additive/multiplicative identity, and `literal` is used otherwise.
+#[inline]
+pub fn literal<T>(n: isize) -> T
+ where T: FromPrimitive,
+{
+	FromPrimitive::from_int(n).unwrap()
+}
+
 //-------------------------------
 // isqrt helper methods
 
@@ -68,10 +78,10 @@ fn isqrt_safe<T>(n: T) -> T
 	//       algorithm take twice as long for BigInts :/
 	if n.is_zero() { return Zero::zero(); }
 	let mut x = n.clone();
-	let mut y = (x.clone() + n.clone() / x.clone()) >> One::one();
+	let mut y = (x.clone() + n.clone() / x.clone()) >> literal(1);
 	while y < x {
 		x = y.clone();
-		y = (x.clone() + n.clone() / x.clone()) >> One::one();
+		y = (x.clone() + n.clone() / x.clone()) >> literal(1);
 	}
 	return x;
 }
