@@ -19,6 +19,7 @@ use num::BigUint;
 use test::Bencher;
 
 use util::literal;
+use util::mod_pow;
 
 pub trait PrimeTester<T>
  where T: Eq + Clone + Zero + One,
@@ -199,33 +200,6 @@ fn decompose_pow2_odd<T>(x: T) -> (T, T)
 		remaining = remaining >> literal(1);
 	}
 	return (pow2, remaining);
-}
-
-fn mod_pow<T,P>(x: T, power: P, modulus: T) -> T
- where T: Eq + Clone + ToPrimitive + FromPrimitive + Integer,
-       P: Eq + Clone + ToPrimitive + FromPrimitive + Integer + Shr<usize, Output=P>,
-{
-	let mut prod:T = One::one();
-	let mut remaining = power;
-	let mut cur = x;
-	while remaining > Zero::zero() {
-		if remaining.is_odd() {
-			prod = prod * cur.clone();
-			prod = prod % modulus.clone();
-		}
-		remaining = remaining >> 1;
-		cur = cur.clone() * cur;
-		cur = cur % modulus.clone();
-	}
-	prod
-}
-
-#[test]
-fn test_mod_pow()
-{
-	assert_eq!(mod_pow(234u64, 0, 1259), 1);
-	assert_eq!(mod_pow(234u64, 1, 1259), 234);
-	assert_eq!(mod_pow(234u64, 2412, 1259), 1091);
 }
 
 #[test]

@@ -52,6 +52,34 @@ pub fn literal<T>(n: isize) -> T
 	FromPrimitive::from_int(n).unwrap()
 }
 
+/// Computes `pow(x, power) % modulus` using exponentation by squaring.
+pub fn mod_pow<T,P>(x: T, power: P, modulus: T) -> T
+ where T: Eq + Clone + ToPrimitive + FromPrimitive + Integer,
+       P: Eq + Clone + ToPrimitive + FromPrimitive + Integer + Shr<usize, Output=P>,
+{
+	let mut prod:T = One::one();
+	let mut remaining = power;
+	let mut cur = x;
+	while remaining > Zero::zero() {
+		if remaining.is_odd() {
+			prod = prod * cur.clone();
+			prod = prod % modulus.clone();
+		}
+		remaining = remaining >> 1;
+		cur = cur.clone() * cur;
+		cur = cur % modulus.clone();
+	}
+	prod
+}
+
+#[test]
+fn test_mod_pow()
+{
+	assert_eq!(mod_pow(234u64, 0, 1259), 1);
+	assert_eq!(mod_pow(234u64, 1, 1259), 234);
+	assert_eq!(mod_pow(234u64, 2412, 1259), 1091);
+}
+
 //-------------------------------
 // isqrt helper methods
 
