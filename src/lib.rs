@@ -17,6 +17,7 @@ extern crate test;
 
 pub use primes::PrimeTester;
 pub use primes::PrimeSieve;
+pub use primes::MillerRabinTester;
 pub use factorizer::Factorizer;
 pub use factorizer::TrialDivisionFactorizer;
 //pub use factorizer::FermatFactorizer;
