@@ -7,6 +7,7 @@
 // to those terms.
 
 extern crate num;
+extern crate test;
 
 use std::num::{ToPrimitive,FromPrimitive}; // and regret it
 use std::iter::range_step;
@@ -15,6 +16,7 @@ use std::fmt::Debug;
 
 use num::{Zero,One,Integer};
 use num::BigUint;
+use test::Bencher;
 
 use util::literal;
 
@@ -123,8 +125,14 @@ impl<T> MillerRabinTester<T>
 		//  to correctly identify all numbers up to some limit.
 
 		// This set of witnesses is known to work for all n < 3,474,749,660,383
-		vec![literal(2), literal(3), literal(5), literal(7), literal(11), literal(13)]
-			.into_iter().filter(|v| v < &x).collect()
+
+		let v = vec![literal(2), literal(3), literal(5), literal(7), literal(11), literal(13)];
+
+		if x > literal(13) {
+			v
+		} else {
+			v.into_iter().filter(|v| v < &x).collect()
+		}
 	}
 }
 
@@ -201,7 +209,7 @@ fn mod_pow<T,P>(x: T, power: P, modulus: T) -> T
 	let mut remaining = power;
 	let mut cur = x;
 	while remaining > Zero::zero() {
-		if remaining.clone() % literal(2) == literal(1) {
+		if remaining.is_odd() {
 			prod = prod * cur.clone();
 			prod = prod % modulus.clone();
 		}
@@ -246,3 +254,16 @@ fn test_miller_mersenne()
 		assert!(MillerRabinTester.is_prime(&mersenne));
 	}
 }
+
+#[bench]
+fn bench_mersenne(b: &mut Bencher)
+{
+	let one: BigUint = literal(1);
+	let two: BigUint = literal(2);
+	let mersenne: BigUint = num::pow(two,107) - one;
+
+	b.iter(|| {
+		MillerRabinTester.is_prime(&mersenne)
+	})
+}
+
