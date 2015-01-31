@@ -11,6 +11,7 @@
 // TODO: Make documentation not be "currently under construction." :P
 
 #![allow(unused_imports)]
+#![deny(unused_must_use)]
 
 extern crate num;
 extern crate test;
