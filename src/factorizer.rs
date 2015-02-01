@@ -29,6 +29,7 @@ pub use TrialDivisionFactorizer as SafeFactorizer;
 pub use TrialDivisionFactorizer as DefaultFactorizer;
 
 pub use factorizer_dixon::DixonFactorizer;
+pub use factorizer_pollard::PollardBrentFactorizer;
 
 //// XXX: Would reduce some of the pain in keeping impl type bounds consistent, but would also require the
 ////      trait to be explicitly implemented for all applicable types, which arguably sucks just as much.
@@ -232,6 +233,9 @@ mod tests {
 		test_242::<BigInt,_>(TrialDivisionFactorizer);
 
 		// TODO: Test other factorizers here when they exist
-		test_242::<u64,_>(DixonFactorizer::new(vec![2,3,5]));
+//		test_242::<u64,_>(DixonFactorizer::new(vec![2,3,5])); // TODO arghhhfhghghrbl
+
+		test_242::<i64,_>(PollardBrentFactorizer);
+		test_242::<u64,_>(PollardBrentFactorizer);
 	}
 }

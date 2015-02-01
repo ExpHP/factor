@@ -23,6 +23,7 @@ pub use factorizer::Factorizer;
 pub use factorizer::TrialDivisionFactorizer;
 //pub use factorizer::FermatFactorizer;
 pub use factorizer_dixon::DixonFactorizer;
+pub use factorizer_pollard::PollardBrentFactorizer;
 //pub use factorizer::GeneralFactorizer;
 pub use factorizer::SafeFactorizer;
 pub use factorizer::DefaultFactorizer;

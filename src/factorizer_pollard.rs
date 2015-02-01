@@ -23,7 +23,6 @@ use std::num::Int;
 use std::cmp::min;
 
 use num::{Zero, One, Integer};
-use num::traits::Signed;
 
 use factorize;
 use factorization::Factorization;
@@ -36,10 +35,10 @@ pub struct PollardBrentFactorizer<T>;
 
 impl<T> Factorizer<T>
 for PollardBrentFactorizer<T>
- where T: Eq + Clone + FromPrimitive + ToPrimitive + Zero + One + Integer + Shr<usize, Output=T> + Hash<Hasher> + SampleRange + Int + Signed,
+ where T: Eq + Clone + FromPrimitive + ToPrimitive + Zero + One + Integer + Shr<usize, Output=T> + Hash<Hasher> + SampleRange + Int,
 {
 	/// Produce a single factor of `x`.  PollardBrentFactorizer is nondeterministic,
-	///  and will always produce the smallest non-trivial factor of any composite number.
+	///  and will always produce the smallest non-trivial factor of any composite number.  // <--- lies  FIXME
 	///  Thus, the number it returns is also always prime.
 	///
 	/// The runtime scales linearly with the size of the smallest factor of `x`.
@@ -51,39 +50,40 @@ for PollardBrentFactorizer<T>
 		if x < &literal(2) { return x.clone(); }
 
 		let mut rng = weak_rng();
-		let mut y: T = rng.gen_range(One::one(), x.clone());
-		let mut c: T = rng.gen_range(One::one(), x.clone());
-		let mut m: T = rng.gen_range(One::one(), x.clone());
+		let mut y: T = rng.gen_range(One::one(), x.clone()); // current value in the sequence:  y := y^2 + c (mod n)
+		let mut c: T = rng.gen_range(One::one(), x.clone()); // parameter of y sequence
+		let mut m: T = rng.gen_range(One::one(), x.clone()); // step size when multiplying crap together
 
-		let mut g: T = One::one();
-		let mut r: T = One::one();
-		let mut q: T = One::one();
+		let mut g: T = One::one(); // contains the result
+		let mut r: T = One::one(); // some kind of very coarse index
+		let mut q: T = One::one(); // running product of `(z-y)` values  (TODO: I think this can be made local to each k loop?)
 
-		let mut y_prev: T = Zero::zero();
+		let mut z: T = Zero::zero();      // Initial value of `y` for the current `r` value.
+		let mut y_prev: T = Zero::zero(); // Initial value of `y` for the current `k` value.
 
-		let mut z: T = Zero::zero();
-
+		// Perform a coarse-grained search through the sequence of `y` values.
 		while g == One::one() {
-			let mut z = y.clone();
+			z = y.clone();
 
 			for _ in num::iter::range(Zero::zero(), r) {
 				y = next_in_sequence(y, x.clone(), c.clone());
 			}
 
-			// NOTE:  The purpose of this appears to be to avoid computing the
-			//        gcd at every term in the sequence, and instead only computing
-			//        it every m'th term.
 			let mut k: T = Zero::zero();
 			while k < r && g == One::one() {
 				y_prev = y;
 
 				let niter = min(m.clone(), r.clone() - k.clone());
+
+				// Multiply a bunch of (z-y) terms together (which may share factors with x)
 				for _ in num::iter::range(Zero::zero(), niter) {
 					y = next_in_sequence(y, x.clone(), c.clone());
 
-					// FIXME: Not only will this fail for signed types, but it appears to be nonsense.
-					//        Since when do absolute value and modular arithmetic EVER go together?
-					q = q * (z.clone() - y.clone()).abs();
+					// Deviation from the source linked above, to support unsigned integers:
+					//    abs(z-y) % x  --->  (x+z-y) % x
+					// This is based on the notion that `gcd(+a % b, b) == gcd(-a % b, b)`,
+					// so the absolute value isn't really necessary.
+					q = q * (x.clone() + z.clone() - y.clone());
 					q = q % x.clone();
 				}
 
@@ -92,22 +92,25 @@ for PollardBrentFactorizer<T>
 			}
 
 			r = r * literal(2);
-		}
+		} // end coarse-grained search
 
-		// FIXME:  The following block of code (which is in the original implementation from which
-		//          this is adapted; see above) clearly never runs, as g = gcd(q, x), and the value
-		//          of q is reduced mod x.
-		//         Find out the original author's intent!
+		// N.B. The following occurs when q == 0 (mod x).
 		if &g == x {
+
+			// Return to the beginning of this `k` step
 			y = y_prev;
+
 			loop {
+				// Do a more fine grained search (computing the GCD every step)
 				y = next_in_sequence(y, x.clone(), c.clone());
-				g = gcd(x.clone(), (z.clone() - y.clone()).abs());
+				g = gcd(x.clone(), x.clone() + z.clone() - y.clone()); // same deviation as noted above
 
 				if g > One::one() { break; }
 			}
 		}
 
+		// At this point, g is a nontrivial factor, or g == x.
+		// In the latter case, g may still be composite (a "pseudoprime")
 		return g;
 	}
 }
