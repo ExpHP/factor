@@ -28,7 +28,7 @@ pub use factorizer_pollard::PollardBrentFactorizer;
 //pub use factorizer::GeneralFactorizer;
 pub use factorizer::SafeFactorizer;
 pub use factorizer::DefaultFactorizer;
-pub use factorizer::FactorStore;
+pub use factorizer::ListFactorizer;
 pub use factorization::Factorization;
 pub use util::isqrt;
 pub use util::gcd;

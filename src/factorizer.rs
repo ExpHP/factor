@@ -141,26 +141,30 @@ pub struct GeneralFactorizer<T>
 
 /// Factors numbers by using results cached from another `Factorizer`.
 ///
-/// A `Factorizer` which stores factors produced by another `Factorizer` for quick lookup.
-/// Only a single non-trivial factor is stored for each composite number, from which
-///  the full decomposition can be gathered recursively.
+/// Stores factors produced by another `Factorizer` for quick lookup. Only a single non-trivial
+///  factor is stored for each composite number, from which the full decomposition can be
+///  gathered recursively.
 #[derive(Clone, Debug)]
-pub struct FactorStore<T> {
-	// I wanted to call it FactorTree but it's really a DAG.  x_x
-
+pub struct ListFactorizer<T>
+{
 	factors: Vec<T>,
 }
 
-impl<T> FactorStore<T>
- where T: Eq + Clone + Hash<Hasher> + ToPrimitive + FromPrimitive + Integer
+// TODO: Not sure how to do static dispatch here under the new orphan-checking rules.
+//       Perhaps fix this up if/when unboxed abstract types make an appearance
+impl<T> ListFactorizer<T>
+ where T: Eq + Clone + Hash<Hasher> + ToPrimitive + FromPrimitive + Integer,
 {
-//	// construction method?
-//	fn new(n: T, factorizer: Fn(T) -> T) { }
+	fn new(factorizer: Box<Factorizer<T>>, n: T) -> Self {
+		ListFactorizer {
+			factors: num::iter::range(literal(0), n).map(|x| factorizer.get_factor(&x)).collect(),
+		}
+	}
 }
 
 impl<T> Factorizer<T>
-for FactorStore<T>
- where T: Eq + Clone + Hash<Hasher> + ToPrimitive + FromPrimitive + Zero + One + Integer + Shr<usize, Output=T>,
+for ListFactorizer<T>
+ where T: Eq + Clone + Hash<Hasher> + ToPrimitive + FromPrimitive + Integer,
 {
 	/// Produces the factor stored for `x`.
 	///
@@ -213,16 +217,17 @@ for StubbornFactorizer<P,F,T>
 {
 	fn get_factor(self: &Self, x: &T) -> T
 	{
-		if self.prime_tester.is_prime(x) {
-			x.clone()
-
-		} else {
-			// We are certain that x is not prime, so keep trying to factor until we succeed
+		if self.prime_tester.is_composite(x) {
+			// We are certain that x is composite, so keep trying to factor until we succeed
 			loop {
 				let factor = self.factorizer.get_factor(x);
 
 				if &factor != x { return factor; };
 			}
+
+		} else {
+			// x is 0, 1, or prime.  Or so says the prime tester, at least.
+			x.clone()
 		}
 	}
 }
@@ -231,6 +236,7 @@ for StubbornFactorizer<P,F,T>
 
 #[cfg(test)]
 mod tests {
+	extern crate num;
 	extern crate test;
 
 	use super::*;
@@ -293,4 +299,36 @@ mod tests {
 		test_242::<u64,_>(StubbornFactorizer::new(primes.clone(), PollardBrentFactorizer));
 		test_242::<i64,_>(StubbornFactorizer::new(primes.clone(), PollardBrentFactorizer));
 	}
+
+	// Builds a ListFactorizer up to some limit and verifies it against a list built
+	//  using trial division. The factorizer provided to the macro will be wrapped
+	//  in a StubbornFactorizer, so nondeterministic factorizers are OK.
+	macro_rules! test_nondeterministic_list (
+		($factorizer: expr, $limit: expr) => {
+			{
+				let expected = ListFactorizer::new(Box::new(TrialDivisionFactorizer), $limit);
+
+				let primes = PrimeSieve::new($limit.to_uint().unwrap());
+				let stubborn = StubbornFactorizer::new(primes, $factorizer);
+				let actual = ListFactorizer::new(Box::new(stubborn), $limit);
+
+				// The elements of the two lists may differ, but the complete factorization
+				//  of each number must agree:
+				for i in num::iter::range(literal(0), $limit) {
+					assert_eq!(expected.factorize(i.clone()), actual.factorize(i));
+				};
+			}
+		}
+	);
+
+	#[test]
+	fn test_dixon_list() {
+		test_nondeterministic_list!(DixonFactorizer::new(vec![2,3,5,7]), 100000u64);
+	}
+
+	#[test]
+	fn test_pollard_list() {
+		test_nondeterministic_list!(PollardBrentFactorizer, 100000u64);
+	}
+
 }
