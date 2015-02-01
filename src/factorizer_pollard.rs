@@ -38,10 +38,7 @@ for PollardBrentFactorizer<T>
  where T: Eq + Clone + FromPrimitive + ToPrimitive + Zero + One + Integer + Shr<usize, Output=T> + Hash<Hasher> + SampleRange + Int,
 {
 	/// Produce a single factor of `x`.  PollardBrentFactorizer is nondeterministic,
-	///  and will always produce the smallest non-trivial factor of any composite number.  // <--- lies  FIXME
-	///  Thus, the number it returns is also always prime.
-	///
-	/// The runtime scales linearly with the size of the smallest factor of `x`.
+	/// and may sometimes fail to produce a non-trivial factor for composite `x`.
 	fn get_factor(self: &Self, x: &T) -> T
 	{
 		// Adapted from https://comeoncodeon.wordpress.com/2010/09/18/pollard-rho-brent-integer-factorization/
