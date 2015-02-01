@@ -13,6 +13,7 @@ use std::collections::hash_map::{HashMap,Hasher};
 use std::num::{ToPrimitive,FromPrimitive}; // and regret it
 use std::hash::Hash;
 use std::ops::{Shr,Rem};
+use std::fmt::Debug;
 
 use num::{Zero, One, Integer};
 
@@ -214,6 +215,7 @@ for StubbornFactorizer<P,F,T>
  where P: PrimeTester<T>,
        F: Factorizer<T>,
        T: Eq + Clone + Hash<Hasher> + ToPrimitive + FromPrimitive + Zero + One + Integer,
+       T: Debug,
 {
 	fn get_factor(self: &Self, x: &T) -> T
 	{
@@ -241,7 +243,6 @@ mod tests {
 
 	use super::*;
 
-	use test::Bencher;
 	use std::collections::hash_map::{HashMap,Hasher};
 	use std::num::{ToPrimitive,FromPrimitive}; // and regret it
 	use std::hash::Hash;
@@ -249,9 +250,11 @@ mod tests {
 
 	use num::{BigUint, BigInt};
 	use num::{Zero, One, Integer};
+	use test::Bencher;
 
 	use util::literal;
 	use primes::PrimeSieve;
+	use primes::MillerRabinTester;
 
 	//  A simple test to factorize 242 as an arbitrary data type using an arbitrary factorizer.
 	fn test_242<T, U>(factorizer: U)
@@ -300,17 +303,30 @@ mod tests {
 		test_242::<i64,_>(StubbornFactorizer::new(primes.clone(), PollardBrentFactorizer));
 	}
 
+	fn make_list<F,T>(factorizer: F, limit: T) -> ListFactorizer<T>
+	 where F: Factorizer<T>,
+	       T: Eq + Clone + Debug + Hash<Hasher> + ToPrimitive + FromPrimitive + Integer,
+	{
+		return ListFactorizer::new(Box::new(factorizer), limit);
+	}
+
+	fn make_list_stubborn<F,T>(factorizer: F, limit: T) -> ListFactorizer<T>
+	 where F: Factorizer<T>,
+	       T: Eq + Clone + Debug + Hash<Hasher> + ToPrimitive + FromPrimitive + Integer,
+	{
+		let primes = PrimeSieve::new(limit.to_uint().unwrap());
+		let stubborn = StubbornFactorizer::new(primes, factorizer);
+		return ListFactorizer::new(Box::new(stubborn), limit);
+	}
+
 	// Builds a ListFactorizer up to some limit and verifies it against a list built
 	//  using trial division. The factorizer provided to the macro will be wrapped
 	//  in a StubbornFactorizer, so nondeterministic factorizers are OK.
-	macro_rules! test_nondeterministic_list (
+	macro_rules! test_list_stubborn (
 		($factorizer: expr, $limit: expr) => {
 			{
-				let expected = ListFactorizer::new(Box::new(TrialDivisionFactorizer), $limit);
-
-				let primes = PrimeSieve::new($limit.to_uint().unwrap());
-				let stubborn = StubbornFactorizer::new(primes, $factorizer);
-				let actual = ListFactorizer::new(Box::new(stubborn), $limit);
+				let expected = make_list(TrialDivisionFactorizer, $limit);
+				let actual   = make_list_stubborn($factorizer, $limit);
 
 				// The elements of the two lists may differ, but the complete factorization
 				//  of each number must agree:
@@ -322,13 +338,80 @@ mod tests {
 	);
 
 	#[test]
-	fn test_dixon_list() {
-		test_nondeterministic_list!(DixonFactorizer::new(vec![2,3,5,7]), 100000u64);
+	fn test_list_dixon() {
+		test_list_stubborn!(DixonFactorizer::new(vec![2,3,5,7]), 100000u64);
 	}
 
 	#[test]
-	fn test_pollard_list() {
-		test_nondeterministic_list!(PollardBrentFactorizer, 100000u64);
+	fn test_list_pollard() {
+		test_list_stubborn!(PollardBrentFactorizer, 100000u64);
 	}
 
+	/*
+	// TODO: Make Dixon stop panicking so we can bench it.
+	//       (also make it not suck)
+	#[bench]
+	fn bench_list_dixon(b: &mut Bencher) {
+		b.iter(||
+			make_list_stubborn(DixonFactorizer::new(vec![2,3,5]), 1000u64)
+		);
+	}
+	*/
+
+	#[bench]
+	fn bench_list_trialdiv(b: &mut Bencher) {
+		b.iter(||
+			make_list(TrialDivisionFactorizer, 10000u64)
+		);
+	}
+
+	#[bench]
+	fn bench_list_pollard(b: &mut Bencher) {
+		b.iter(||
+			make_list_stubborn(PollardBrentFactorizer, 10000u64)
+		);
+	}
+
+	// A "rough" number (no small factors) around 10^8
+	const TEN_8_ROUGH: u64  = 99400891; // 9967 * 9973
+
+	// A rough square around 10^8  (some algorithms have extra trouble with repeated factors)
+	const TEN_8_SQUARE: u64 = 99341089; // 9967 * 9967
+
+	#[bench]
+	fn bench_ten_8_rough_trialdiv(b: &mut Bencher) {
+		b.iter(|| {
+			TrialDivisionFactorizer.get_factor(&TEN_8_ROUGH)
+		});
+	}
+
+	#[bench]
+	fn bench_ten_8_rough_pollard(b: &mut Bencher) {
+		let factorizer = StubbornFactorizer::new(MillerRabinTester, PollardBrentFactorizer::<u64>);
+		b.iter(|| {
+			factorizer.get_factor(&TEN_8_ROUGH)
+		});
+	}
+
+	/*
+	#[bench]
+	fn bench_ten_8_rough_dixon(b: &mut Bencher) {
+		let factorizer = StubbornFactorizer::new(MillerRabinTester, DixonFactorizer::new(vec![2,3,5]));
+		b.iter(|| {
+			let f = factorizer.get_factor(&TEN_8_ROUGH);
+			println!("rough {:?}", f);
+			f
+		});
+	}
+
+	#[bench]
+	fn bench_ten_8_square_dixon(b: &mut Bencher) {
+		let factorizer = StubbornFactorizer::new(MillerRabinTester, DixonFactorizer::new(vec![2,3,5]));
+		b.iter(|| {
+			let f = factorizer.get_factor(&TEN_8_SQUARE);
+			println!("square {:?}", f);
+			f
+		});
+	}
+	*/
 }
