@@ -13,6 +13,7 @@ use std::collections::hash_map::{HashMap,Hasher};
 use std::num::{ToPrimitive,FromPrimitive}; // and regret it
 use std::hash::Hash;
 use std::ops::Shr;
+use std::fmt::Debug;
 
 use num::bigint::{ToBigUint,BigUint};
 use num::{Zero,One,Integer};
@@ -25,11 +26,26 @@ use test::Bencher;
 pub fn gcd<T>(a: T,  b: T) -> T
  where T: Clone + Zero + Integer,
 {
-	if (a == Zero::zero()) {
-		b
-	} else {
-		gcd(b % a.clone(), a)
+	let mut cur_a = a;
+	let mut cur_b = b;
+	while (!cur_a.is_zero()) {
+		let old_b = cur_b;
+		cur_b = cur_a.clone();
+		cur_a = old_b % cur_a;
 	}
+	cur_b
+}
+
+#[bench]
+fn bench_gcd(b: &mut Bencher) {
+	use std::rand::weak_rng;
+	use std::rand::Rng;
+	let mut rng = weak_rng();
+	b.iter(|| {
+		let a = rng.gen_range(100000u32,1000000u32);
+		let b = rng.gen_range(100000u32,1000000u32);
+		gcd(a,b)
+	})
 }
 
 /// Performs an integer square root, returning the largest integer whose square is not
