@@ -42,6 +42,7 @@ mod primes;
 mod factorization;
 mod factorizer;
 mod factorizer_dixon;
+mod factorizer_pollard;
 mod util;
 
 
