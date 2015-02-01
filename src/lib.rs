@@ -21,6 +21,7 @@ pub use primes::PrimeSieve;
 pub use primes::MillerRabinTester;
 pub use factorizer::Factorizer;
 pub use factorizer::TrialDivisionFactorizer;
+pub use factorizer::StubbornFactorizer;
 //pub use factorizer::FermatFactorizer;
 pub use factorizer_dixon::DixonFactorizer;
 pub use factorizer_pollard::PollardBrentFactorizer;
