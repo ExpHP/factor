@@ -142,8 +142,9 @@ for DixonFactorizer<T>
 				}
 			}
 		}
-		// temporary solution: panic on failure to find factor (FIXME)
-		panic!("No factor found! :(");
+
+		// x *looks* like a prime...
+		return x.clone();
 	}
 }
 

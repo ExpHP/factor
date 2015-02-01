@@ -19,6 +19,7 @@ use num::{Zero, One, Integer};
 use util::isqrt;
 use util::literal;
 use factorization::Factorization;
+use primes::PrimeTester;
 
 // Type-Synonyms, for semantic purposes.
 // (alas, re-exports don't appear to take docstrings)
@@ -173,6 +174,58 @@ for FactorStore<T>
 	}
 }
 
+/// A `Factorizer` which doesn't take "no" for an answer.
+///
+/// It first tests the number for primality with its `PrimeTester` object.
+/// If the number is not prime, the `StubbornFactorizer` will delegate to another `Factorizer`,
+///  calling it repeatedly until a nontrivial factor is produced.
+///
+/// This makes it possible to factorize using nondeterministic `Factorizers` which can sometimes
+///  fail to produce a nontrivial factor for composite numbers.
+pub struct StubbornFactorizer<P,F,T>
+ where P: PrimeTester<T>,
+       F: Factorizer<T>,
+{
+	prime_tester: P,
+	factorizer:   F,
+}
+
+impl<P,F,T> StubbornFactorizer<P,F,T>
+ where P: PrimeTester<T>,
+       F: Factorizer<T>,
+       T: Eq + Clone + Hash<Hasher> + ToPrimitive + FromPrimitive + Zero + One + Integer,
+{
+	#[inline]
+	pub fn new(prime_tester: P, factorizer: F) -> Self
+	{
+		StubbornFactorizer {
+			prime_tester: prime_tester,
+			factorizer:   factorizer,
+		}
+	}
+}
+
+impl<P,F,T> Factorizer<T>
+for StubbornFactorizer<P,F,T>
+ where P: PrimeTester<T>,
+       F: Factorizer<T>,
+       T: Eq + Clone + Hash<Hasher> + ToPrimitive + FromPrimitive + Zero + One + Integer,
+{
+	fn get_factor(self: &Self, x: &T) -> T
+	{
+		if self.prime_tester.is_prime(x) {
+			x.clone()
+
+		} else {
+			// We are certain that x is not prime, so keep trying to factor until we succeed
+			loop {
+				let factor = self.factorizer.get_factor(x);
+
+				if &factor != x { return factor; };
+			}
+		}
+	}
+}
 
 // Tests
 
@@ -192,6 +245,7 @@ mod tests {
 	use num::{Zero, One, Integer};
 
 	use util::literal;
+	use primes::PrimeSieve;
 
 	//  A simple test to factorize 242 as an arbitrary data type using an arbitrary factorizer.
 	fn test_242<T, U>(factorizer: U)
@@ -232,10 +286,11 @@ mod tests {
 		test_242::<BigUint,_>(TrialDivisionFactorizer);
 		test_242::<BigInt,_>(TrialDivisionFactorizer);
 
-		// TODO: Test other factorizers here when they exist
-//		test_242::<u64,_>(DixonFactorizer::new(vec![2,3,5])); // TODO arghhhfhghghrbl
-
-		test_242::<i64,_>(PollardBrentFactorizer);
-		test_242::<u64,_>(PollardBrentFactorizer);
+		// Non-deterministic factorizers: Test them using a StubbornFactorizer
+		let primes = PrimeSieve::new(256);
+		test_242::<u64,_>(StubbornFactorizer::new(primes.clone(), DixonFactorizer::new(vec![2,3,5])));
+		test_242::<i64,_>(StubbornFactorizer::new(primes.clone(), DixonFactorizer::new(vec![2,3,5])));
+		test_242::<u64,_>(StubbornFactorizer::new(primes.clone(), PollardBrentFactorizer));
+		test_242::<i64,_>(StubbornFactorizer::new(primes.clone(), PollardBrentFactorizer));
 	}
 }
