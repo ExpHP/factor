@@ -36,7 +36,7 @@ pub trait PrimeTester<T>
 	}
 }
 
-#[derive(Clone,Show)]
+#[derive(Clone,Debug)]
 pub struct PrimeSieve
 {
 	sieve: Vec<bool>,

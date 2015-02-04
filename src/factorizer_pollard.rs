@@ -33,6 +33,7 @@ use util::mod_pow;
 
 pub struct PollardBrentFactorizer<T>;
 
+
 impl<T> Factorizer<T>
 for PollardBrentFactorizer<T>
  where T: Eq + Clone + FromPrimitive + ToPrimitive + Zero + One + Integer + Shr<usize, Output=T> + Hash<Hasher> + SampleRange + Int,
@@ -42,6 +43,11 @@ for PollardBrentFactorizer<T>
 	fn get_factor(self: &Self, x: &T) -> T
 	{
 		// Adapted from https://comeoncodeon.wordpress.com/2010/09/18/pollard-rho-brent-integer-factorization/
+
+		// In well-written functions, unused mutability is often indicative of a logic error.
+		// So let it be known: This is NOT a well-written function.
+		#![allow(unused_mut)]
+
 		if x.is_even() { return literal(2); }
 		if x.is_multiple_of(&literal(3)) { return literal(3); }
 		if x < &literal(2) { return x.clone(); }
@@ -53,7 +59,7 @@ for PollardBrentFactorizer<T>
 
 		let mut g: T = One::one(); // contains the result
 		let mut r: T = One::one(); // some kind of very coarse index
-		let mut q: T = One::one(); // running product of `(z-y)` values  (TODO: I think this can be made local to each k loop?)
+		let mut q: T = One::one(); // running product of `(z-y)` values
 
 		let mut z: T = Zero::zero();      // Initial value of `y` for the current `r` value.
 		let mut y_prev: T = Zero::zero(); // Initial value of `y` for the current `k` value.

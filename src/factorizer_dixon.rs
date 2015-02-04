@@ -205,6 +205,7 @@ struct DixonBitmatrix {
 impl DixonBitvec
 {
 	// Mostly for creating DixonBitvecs from literal vecs in tests
+	#[cfg(test)]
 	#[inline]
 	fn from_vecs(elems: Vec<usize>, ids: Vec<usize>) -> DixonBitvec {
 		DixonBitvec {
@@ -317,6 +318,7 @@ fn bit_matrix_to_ref(matrix: &mut DixonBitmatrix)
 	}
 }
 
+#[cfg(test)]
 fn gen_test_matrix() -> DixonBitmatrix {
 	// Test a specific matrix
 	// [1, 0, 0, 0] {0}       [1, 0, 0, 0] {0}
