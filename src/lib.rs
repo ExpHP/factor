@@ -11,7 +11,14 @@
 // TODO: Make documentation not be "currently under construction." :P
 
 #![allow(unused_imports)]
+#![allow(non_snake_case)]
+#![allow(unused_parens)]
 #![deny(unused_must_use)]
+
+#![feature(test)]
+#![feature(core)]
+#![feature(rand)]
+#![feature(collections)]
 
 extern crate num;
 extern crate test;
