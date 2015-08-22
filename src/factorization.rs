@@ -14,7 +14,7 @@ use std::cmp::{min,max};
 use std::collections::HashMap;
 use std::hash::{Hash,Hasher};
 
-use num::{Zero,One,Integer};
+use num::{Zero,One,Integer,FromPrimitive};
 
 
 /// TODO
@@ -106,7 +106,7 @@ impl<K> Factorization<K>
 	{
 		let mut result: K = One::one();
 		for (_,v) in self.powers.iter() {
-			result = result * FromPrimitive::from_uint(v.clone() + 1).unwrap();
+			result = result * FromPrimitive::from_usize(v.clone() + 1).unwrap();
 		};
 		result
 	}
@@ -250,7 +250,8 @@ for Factorization<K>
 }
 
 
-impl<K> Mul<Self> for Factorization<K>
+impl<K> Mul<Factorization<K>>
+for Factorization<K>
  where K: Eq + Clone + Hash<Hasher> + Integer,
 {
 	type Output = Self;

@@ -15,7 +15,7 @@ use std::ops::Shr;
 use std::fmt::Debug;
 
 use num::bigint::{ToBigUint,BigUint};
-use num::{Zero,One,Integer};
+use num::{Zero,One,Integer,FromPrimitive};
 
 use test::Bencher;
 
@@ -63,7 +63,7 @@ pub fn isqrt<T>(n: T) -> T
 pub fn literal<T>(n: isize) -> T
  where T: FromPrimitive,
 {
-	FromPrimitive::from_int(n).unwrap()
+	FromPrimitive::from_isize(n).unwrap()
 }
 
 /// Computes `pow(x, power) % modulus` using exponentation by squaring.
