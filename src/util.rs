@@ -15,7 +15,8 @@ use std::ops::Shr;
 use std::fmt::Debug;
 
 use num::bigint::{ToBigUint,BigUint};
-use num::{Zero,One,Integer,FromPrimitive};
+use num::{Zero,One,Integer};
+use num::{FromPrimitive,ToPrimitive};
 
 use test::Bencher;
 
@@ -49,7 +50,7 @@ fn bench_gcd(b: &mut Bencher) {
 /// Performs an integer square root, returning the largest integer whose square is not
 ///  greater than the argument.
 pub fn isqrt<T>(n: T) -> T
- where T: Clone + Zero + Integer + Shr<usize, Output=T>,
+ where T: Clone + Zero + Integer + Shr<usize, Output=T> + FromPrimitive + ToPrimitive,
 {
 	isqrt_fast(n.clone()).or_else(
 		|| Some(isqrt_safe(n.clone()))
@@ -98,7 +99,7 @@ fn test_mod_pow()
 // isqrt helper methods
 
 fn isqrt_fast<T>(x: T) -> Option<T>
- where T: FromPrimitive,
+ where T: FromPrimitive + ToPrimitive,
 {
 	x.to_f64().and_then(|f| {
 		// Mantissa is 52 bits, and the square root takes half as many bits, so this

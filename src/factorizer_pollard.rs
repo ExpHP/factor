@@ -17,6 +17,7 @@ use std::mem::swap;
 use std::cmp::min;
 
 use num::{Zero, One, Integer};
+use num::{FromPrimitive, ToPrimitive};
 use rand::Rng;
 use rand::weak_rng;
 use rand::distributions::range::SampleRange;
@@ -28,12 +29,12 @@ use util::literal;
 use util::gcd;
 use util::mod_pow;
 
-pub struct PollardBrentFactorizer<T>;
+pub struct PollardBrentFactorizer;
 
 
 impl<T> Factorizer<T>
-for PollardBrentFactorizer<T>
- where T: Eq + Clone + Zero + One + Integer + Shr<usize, Output=T> + Hash + SampleRange,
+for PollardBrentFactorizer
+ where T: Eq + Clone + Zero + One + Integer + Shr<usize, Output=T> + Hash + SampleRange + FromPrimitive + ToPrimitive,
 {
 	/// Produce a single factor of `x`.  PollardBrentFactorizer is nondeterministic,
 	/// and may sometimes fail to produce a non-trivial factor for composite `x`.
@@ -42,7 +43,7 @@ for PollardBrentFactorizer<T>
 		// Adapted from https://comeoncodeon.wordpress.com/2010/09/18/pollard-rho-brent-integer-factorization/
 
 		// In well-written functions, unused mutability is often indicative of a logic error.
-		// So let it be known: This is NOT a well-written function.
+		// So let it be known that this is NOT a well-written function:
 		#![allow(unused_mut)]
 
 		if x.is_even() { return literal(2); }

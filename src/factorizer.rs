@@ -13,8 +13,10 @@ use std::collections::HashMap;
 use std::hash::Hash;
 use std::ops::{Shr,Rem};
 use std::fmt::Debug;
+use std::marker::PhantomData;
 
 use num::{Zero, One, Integer};
+use num::{FromPrimitive, ToPrimitive};
 
 use util::isqrt;
 use util::literal;
@@ -88,14 +90,12 @@ pub trait Factorizer<T>
 /// Despite its primitive nature, it can well outperform many of the more sophisticated methods
 ///  when factoring small numbers (TODO: of what magnitude?). However, it has trouble on numbers
 ///  with large prime factors.
-pub struct TrialDivisionFactorizer<T>
- where T: Eq + Clone + Zero + One + Integer + Shr<usize, Output=T> + Hash
-;
+pub struct TrialDivisionFactorizer;
 
 
 impl<T> Factorizer<T>
-for TrialDivisionFactorizer<T>
- where T: Eq + Clone + Zero + One + Integer + Shr<usize, Output=T> + Hash,
+for TrialDivisionFactorizer
+ where T: Eq + Clone + Zero + One + Integer + Shr<usize, Output=T> + Hash + FromPrimitive + ToPrimitive,
 {
 	/// Produce a single factor of `x`.  TrialDivisionFactorizer is deterministic,
 	///  and will always produce the smallest non-trivial factor of any composite number.
@@ -129,15 +129,15 @@ for TrialDivisionFactorizer<T>
 	//       to this Factorizer, and should be overriden.
 }
 
-/// TODO
-pub struct FermatFactorizer<T>
- where T: Eq + Clone + Zero + One + Integer + Hash
-;
+// TODO
+//pub struct FermatFactorizer<T>
+// where T: Eq + Clone + Zero + One + Integer + Hash
+//;
 
-/// TODO
-pub struct GeneralFactorizer<T>
- where T: Eq + Clone + Zero + One + Integer + Hash
-;
+// TODO
+//pub struct GeneralFactorizer<T>
+// where T: Eq + Clone + Zero + One + Integer + Hash
+//;
 
 /// Factors numbers by using results cached from another `Factorizer`.
 ///
@@ -153,7 +153,7 @@ pub struct ListFactorizer<T>
 // TODO: Not sure how to do static dispatch here under the new orphan-checking rules.
 //       Perhaps fix this up if/when unboxed abstract types make an appearance
 impl<T> ListFactorizer<T>
- where T: Eq + Clone + Hash + Integer,
+ where T: Eq + Clone + Hash + Integer + FromPrimitive + ToPrimitive,
 {
 	fn new(factorizer: Box<Factorizer<T>>, n: T) -> Self {
 		ListFactorizer {
@@ -164,7 +164,7 @@ impl<T> ListFactorizer<T>
 
 impl<T> Factorizer<T>
 for ListFactorizer<T>
- where T: Eq + Clone + Hash + Integer,
+ where T: Eq + Clone + Hash + Integer + ToPrimitive,
 {
 	/// Produces the factor stored for `x`.
 	///
@@ -174,7 +174,7 @@ for ListFactorizer<T>
 	#[inline]
 	fn get_factor(self: &Self, x: &T) -> T
 	{
-		self.factors[x.to_uint().unwrap()].clone()
+		self.factors[x.to_usize().unwrap()].clone()
 	}
 }
 
@@ -192,6 +192,7 @@ pub struct StubbornFactorizer<P,F,T>
 {
 	prime_tester: P,
 	factorizer:   F,
+	phantom:      PhantomData<T>,
 }
 
 impl<P,F,T> StubbornFactorizer<P,F,T>
@@ -205,6 +206,7 @@ impl<P,F,T> StubbornFactorizer<P,F,T>
 		StubbornFactorizer {
 			prime_tester: prime_tester,
 			factorizer:   factorizer,
+			phantom:      PhantomData,
 		}
 	}
 }

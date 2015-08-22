@@ -13,6 +13,7 @@ use std::ops::Shr;
 use std::fmt::Debug;
 
 use num::{Zero,One,Integer};
+use num::{ToPrimitive,FromPrimitive};
 use num::BigUint;
 use test::Bencher;
 
@@ -54,7 +55,7 @@ impl PrimeSieve
 
 impl<T> PrimeTester<T>
 for PrimeSieve
- where T: Eq + Clone + Integer,
+ where T: Eq + Clone + Integer + ToPrimitive,
 {
 	//! All of the work involved in identifying prime numbers with a PrimeSieve
 	//!  is done during the sieve's construction, so a PrimeSieve can test primality
@@ -77,13 +78,13 @@ for PrimeSieve
 	///
 	/// # Panics
 	/// 
-	/// Panics if ToPrimitive.to_uint() fails (for whatever reason), or if the index
+	/// Panics if ToPrimitive.to_usize() fails (for whatever reason), or if the index
 	///  lies outside the array.
 	// TODO: test panics
 	#[inline]
 	fn is_prime(self: &Self, x: &T) -> bool
 	{
-		self.sieve[x.to_uint().unwrap()]
+		self.sieve[x.to_usize().unwrap()]
 	}
 }
 
@@ -106,18 +107,19 @@ fn compute_sieve_of_eratosthenes(limit: usize) -> Vec<bool>
 	sieve
 }
 
-pub struct MillerRabinTester<T>;
+pub struct MillerRabinTester;
 
 // TODO: implement non-deterministic miller-rabin
 // TODO: implement different choices of witnesses for deterministic miller-rabin (and
 //         have them validate their input against the max number for which they work)
-impl<T> MillerRabinTester<T>
- where T: Eq + Clone + Integer,
+impl MillerRabinTester
 {
 	/// Produces some set of numbers in the half-open interval `[0,x)` to use
 	///  as potential witnesses for the Miller Rabin Test.
 	// TODO: a term like "witness" prolly isn't fit for public API without definition
-	pub fn collect_witnesses(self: &Self, x: T) -> Vec<T> {
+	pub fn collect_witnesses<T>(self: &Self, x: T) -> Vec<T>
+	 where T: Eq + Clone + Integer + FromPrimitive,
+	{
 		// There's a couple of options here.
 		// Several witnesses can be chosen at random for a strong heuristic test,
 		//  or one can use a small set of witnesses that has been demonstrated
@@ -137,8 +139,8 @@ impl<T> MillerRabinTester<T>
 
 
 impl<T> PrimeTester<T>
-for MillerRabinTester<T>
- where T: Eq + Clone + Integer + Shr<usize, Output=T> + Debug,
+for MillerRabinTester
+ where T: Eq + Clone + Integer + Shr<usize, Output=T> + Debug + FromPrimitive,
 {
 	fn is_prime(self: &Self, x: &T) -> bool
 	{
@@ -189,7 +191,7 @@ for MillerRabinTester<T>
 // Decomposes a number `x` into the form `2.pow(k) * d` where `d` is odd,
 //  returning `(k,d)`.
 fn decompose_pow2_odd<T>(x: T) -> (T, T)
- where T: Eq + Clone + Integer + Shr<usize, Output=T>,
+ where T: Eq + Clone + Integer + Shr<usize, Output=T> + FromPrimitive,
 {
 	let mut remaining = x;
 	let mut pow2: T = Zero::zero();

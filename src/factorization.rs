@@ -40,8 +40,6 @@ pub struct Factorization<K>
 //           for the all-prime case, and the user would have to be trusted to
 //           use them responsibly.
 
-// NOTE: ToPrimitive and FromPrimitive are unstable, and are currently included
-//  in case I feel compelled to make a FactorTree using BigInt
 impl<K> Factorization<K>
  where K: Eq + Clone + Integer + Hash,
 {
@@ -103,6 +101,7 @@ impl<K> Factorization<K>
 	/// assert_eq!(f.count_divisors(), 6);
 	/// ```
 	pub fn count_divisors(self: &Self) -> K
+	 where K: FromPrimitive,
 	{
 		let mut result: K = One::one();
 		for (_,v) in self.powers.iter() {

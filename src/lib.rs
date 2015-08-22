@@ -41,6 +41,7 @@ use std::hash::Hash;
 use std::ops::Shr;
 
 use num::{Zero,One,Integer};
+use num::{FromPrimitive,ToPrimitive};
 
 mod primes;
 mod factorization;
@@ -52,7 +53,7 @@ mod util;
 
 /// Factors a number using `DefaultFactorizer`.
 pub fn factorize<T>(x: T) -> Factorization<T>
- where T: Eq + Clone + Zero + One + Integer + Shr<usize, Output=T> + Hash
+ where T: Eq + Clone + Zero + One + Integer + Shr<usize, Output=T> + Hash + ToPrimitive + FromPrimitive
 {
 	DefaultFactorizer.factorize(x)
 }

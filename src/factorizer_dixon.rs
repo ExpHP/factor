@@ -15,6 +15,7 @@ use std::ops::{Shr,Rem};
 use std::mem::swap;
 
 use num::{Zero, One, Integer};
+use num::{FromPrimitive, ToPrimitive};
 use rand::Rng;
 use rand::weak_rng;
 use rand::distributions::range::SampleRange;
@@ -47,7 +48,7 @@ impl<T> DixonFactorizer<T>
 
 impl<T> Factorizer<T>
 for DixonFactorizer<T>
- where T: Eq + Clone + Zero + One + Integer + Shr<usize, Output=T> + Hash + SampleRange,
+ where T: Eq + Clone + Zero + One + Integer + Shr<usize, Output=T> + Hash + SampleRange + FromPrimitive + ToPrimitive,
 {
 	/// Produce a single factor of `x`.  TrialDivisionFactorizer is deterministic,
 	///  and will always produce the smallest non-trivial factor of any composite number.
