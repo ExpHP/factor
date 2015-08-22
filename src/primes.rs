@@ -90,16 +90,13 @@ for PrimeSieve
 
 fn compute_sieve_of_eratosthenes(limit: usize) -> Vec<bool>
 {
-	let mut sieve: Vec<bool> = Vec::new();
-
-	sieve.resize(limit, true); // not sure if idiomatic way to initialize?
+	let mut sieve: Vec<bool> = vec![true; limit];
 	sieve[0] = false;
 	sieve[1] = false;
 
 	for p in (2..limit) {
 		if sieve[p] {
-//			for multiple in range_step(p*p, limit, p) {
-			for multiple in (p*p..limit).step_by(p) {  // future form of above?
+			for multiple in (p*p..limit).step_by(p) {
 				sieve[multiple] = false;
 			};
 		};

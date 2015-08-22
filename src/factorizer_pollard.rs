@@ -66,13 +66,13 @@ for PollardBrentFactorizer
 		while g == One::one() {
 			z = y.clone();
 
-			for _ in num::iter::range(Zero::zero(), r) {
+			for _ in num::iter::range(Zero::zero(), r.clone()) {
 				y = next_in_sequence(y, x.clone(), c.clone());
 			}
 
 			let mut k: T = Zero::zero();
 			while k < r && g == One::one() {
-				y_prev = y;
+				y_prev = y.clone();
 
 				let niter = min(m.clone(), r.clone() - k.clone());
 
