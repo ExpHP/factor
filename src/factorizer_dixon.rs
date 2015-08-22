@@ -9,10 +9,9 @@
 extern crate num;
 extern crate test;
 
-use std::collections::hash_map::{HashMap,Hasher};
-use std::collections::{Bitv,BitvSet};
+use std::collections::{HashMap,BitSet};
 use std::num::{ToPrimitive,FromPrimitive}; // and regret it
-use std::hash::Hash;
+use std::hash::{Hash,Hasher};
 use std::ops::{Shr,Rem};
 use std::rand::Rng;
 use std::rand::weak_rng;
@@ -192,8 +191,8 @@ fn factorize_limited_test() {
 //  the underlying data representation from the general algorithm.
 #[derive(Eq,PartialEq,Clone,Debug)]
 struct DixonBitvec {
-	elements: BitvSet, // represents the power of each prime modulo 2
-	indices:  BitvSet, // indicates which rows have been xor'ed to make this row
+	elements: BitSet, // represents the power of each prime modulo 2
+	indices:  BitSet, // indicates which rows have been xor'ed to make this row
 }
 
 #[derive(Eq,PartialEq,Clone,Debug)]
@@ -221,7 +220,7 @@ impl DixonBitvec
 	}
 
 	#[inline]
-	fn into_index_set(self: Self) -> BitvSet {
+	fn into_index_set(self: Self) -> BitSet {
 		self.indices
 	}
 
@@ -271,10 +270,10 @@ fn bit_matrix_from_factorizations<T>(factorizations: &Vec<Factorization<T>>, pri
 	let rows: Vec<DixonBitvec> = factorizations.iter().enumerate().map(|(row_index,fact)| {
 
 		// set elements equal to powers in factorization, mod 2
-		let elements: BitvSet = (0usize..primes.len()).filter(|i| fact.get(&primes[*i]) % 2 == 1).collect();
+		let elements: BitSet = (0usize..primes.len()).filter(|i| fact.get(&primes[*i]) % 2 == 1).collect();
 
 		// indices initially contains just the index for this row
-		let mut indices = BitvSet::new();
+		let mut indices = BitSet::new();
 		indices.insert(row_index);
 
 		// Construct the row

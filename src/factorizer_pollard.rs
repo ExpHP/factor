@@ -9,10 +9,9 @@
 extern crate num;
 extern crate test;
 
-use std::collections::hash_map::{HashMap,Hasher};
-use std::collections::{Bitv,BitvSet};
+use std::collections::HashMap;
 use std::num::{ToPrimitive,FromPrimitive}; // and regret it
-use std::hash::Hash;
+use std::hash::{Hash,Hasher};
 use std::ops::{Shr,Rem};
 use std::rand::Rng;
 use std::rand::weak_rng;

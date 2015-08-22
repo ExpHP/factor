@@ -35,7 +35,8 @@ pub use factorization::Factorization;
 pub use util::isqrt;
 pub use util::gcd;
 
-use std::collections::hash_map::{HashMap,Hasher};
+use std::collections::HashMap;
+use std::hash::Hasher;
 use std::num::{ToPrimitive,FromPrimitive};
 use std::hash::Hash;
 use std::ops::Shr;

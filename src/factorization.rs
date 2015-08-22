@@ -8,12 +8,12 @@
 
 extern crate num;
 
-use std::collections::hash_map::{HashMap,Hasher};
 use std::default::Default;
 use std::ops::{Add,Sub,Mul,Div,Rem};
 use std::cmp::{min,max};
 use std::num::{ToPrimitive,FromPrimitive}; // and regret it
-use std::hash::Hash;
+use std::collections::HashMap;
+use std::hash::{Hash,Hasher};
 
 use num::{Zero,One,Integer};
 
