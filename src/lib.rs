@@ -10,6 +10,9 @@
 
 // TODO: Make documentation not be "currently under construction." :P
 
+#![feature(test)]
+#![feature(step_by)]
+
 #![allow(unused_imports)]
 #![allow(non_snake_case)]
 #![allow(unused_parens)]
@@ -18,6 +21,7 @@
 extern crate num;
 extern crate test;
 extern crate rand;
+extern crate bit_set;
 
 pub use primes::PrimeTester;
 pub use primes::PrimeSieve;

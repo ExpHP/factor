@@ -9,7 +9,7 @@
 extern crate num;
 extern crate test;
 
-use std::collections::{HashMap,BitSet};
+use std::collections::HashMap;
 use std::hash::Hash;
 use std::ops::{Shr,Rem};
 use std::mem::swap;
@@ -19,6 +19,7 @@ use num::{FromPrimitive, ToPrimitive};
 use rand::Rng;
 use rand::weak_rng;
 use rand::distributions::range::SampleRange;
+use bit_set::BitSet;
 
 use factorize;
 use factorization::Factorization;

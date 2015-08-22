@@ -189,6 +189,7 @@ for ListFactorizer<T>
 pub struct StubbornFactorizer<P,F,T>
  where P: PrimeTester<T>,
        F: Factorizer<T>,
+       T: Eq + Clone + Hash + Zero + One + Integer,
 {
 	prime_tester: P,
 	factorizer:   F,

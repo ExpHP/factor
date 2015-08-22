@@ -7,3 +7,4 @@ authors = ["Michael Lamparski <me@this.isnt.really.my.email.org>"]
 [dependencies]
 num = "*"
 rand = "*"
+bit-set = "*"
