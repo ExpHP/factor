@@ -15,11 +15,6 @@
 #![allow(unused_parens)]
 #![deny(unused_must_use)]
 
-#![feature(test)]
-#![feature(core)]
-#![feature(rand)]
-#![feature(collections)]
-
 extern crate num;
 extern crate test;
 
