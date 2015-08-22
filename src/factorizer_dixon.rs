@@ -10,7 +10,7 @@ extern crate num;
 extern crate test;
 
 use std::collections::{HashMap,BitSet};
-use std::hash::{Hash,Hasher};
+use std::hash::Hash;
 use std::ops::{Shr,Rem};
 use std::mem::swap;
 
@@ -25,7 +25,7 @@ use factorizer::Factorizer;
 use util::{isqrt,gcd};
 
 pub struct DixonFactorizer<T>
- where T: Eq + Clone + Zero + One + Integer + Hash<Hasher>
+ where T: Eq + Clone + Zero + One + Integer + Hash
 {
 	primes:       Vec<T>,
 	extra_count:  usize,
@@ -33,7 +33,7 @@ pub struct DixonFactorizer<T>
 }
 
 impl<T> DixonFactorizer<T>
- where T: Eq + Clone + Zero + One + Integer + Hash<Hasher>
+ where T: Eq + Clone + Zero + One + Integer + Hash
 {
 	pub fn new(primes: Vec<T>) -> Self
 	{
@@ -47,7 +47,7 @@ impl<T> DixonFactorizer<T>
 
 impl<T> Factorizer<T>
 for DixonFactorizer<T>
- where T: Eq + Clone + Zero + One + Integer + Shr<usize, Output=T> + Hash<Hasher> + SampleRange,
+ where T: Eq + Clone + Zero + One + Integer + Shr<usize, Output=T> + Hash + SampleRange,
 {
 	/// Produce a single factor of `x`.  TrialDivisionFactorizer is deterministic,
 	///  and will always produce the smallest non-trivial factor of any composite number.
@@ -151,7 +151,7 @@ for DixonFactorizer<T>
 // Utility function that only returns a factorization if it can be constructed
 //  *exclusively* from the given primes.
 fn factorize_limited<T>(x: T, primes: &Vec<T>) -> Option<Factorization<T>>
- where T: Eq + Clone + Zero + One + Integer + Hash<Hasher> + SampleRange
+ where T: Eq + Clone + Zero + One + Integer + Hash + SampleRange
 {
 	assert!(!x.is_zero());
 
@@ -264,7 +264,7 @@ impl DixonBitmatrix
 
 // Produce matrix from initial input
 fn bit_matrix_from_factorizations<T>(factorizations: &Vec<Factorization<T>>, primes: &Vec<T>) -> DixonBitmatrix
- where T: Eq + Clone + Zero + One + Integer + Hash<Hasher>
+ where T: Eq + Clone + Zero + One + Integer + Hash
 {
 	let rows: Vec<DixonBitvec> = factorizations.iter().enumerate().map(|(row_index,fact)| {
 

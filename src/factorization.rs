@@ -12,7 +12,7 @@ use std::default::Default;
 use std::ops::{Add,Sub,Mul,Div,Rem};
 use std::cmp::{min,max};
 use std::collections::HashMap;
-use std::hash::{Hash,Hasher};
+use std::hash::Hash;
 
 use num::{Zero,One,Integer,FromPrimitive};
 
@@ -20,7 +20,7 @@ use num::{Zero,One,Integer,FromPrimitive};
 /// TODO
 #[derive(Eq,PartialEq,Debug,Clone)]
 pub struct Factorization<K>
- where K: Eq + Clone + Integer + Hash<Hasher>,
+ where K: Eq + Clone + Integer + Hash,
 {
 	// powers are currently usize for consistency with the pow() functions
 	//  in both std::num and the num crate.
@@ -43,7 +43,7 @@ pub struct Factorization<K>
 // NOTE: ToPrimitive and FromPrimitive are unstable, and are currently included
 //  in case I feel compelled to make a FactorTree using BigInt
 impl<K> Factorization<K>
- where K: Eq + Clone + Integer + Hash<Hasher>,
+ where K: Eq + Clone + Integer + Hash,
 {
 
 	pub fn set(self: &mut Self, key: K, pwr: usize) {
@@ -232,7 +232,7 @@ impl<K> Factorization<K>
 
 impl<K> One
 for Factorization<K>
- where K: Eq + Clone + Hash<Hasher> + Integer,
+ where K: Eq + Clone + Hash + Integer,
 {
 	/// Creates a Factorization representing `1`.
 	fn one() -> Self
@@ -242,7 +242,7 @@ for Factorization<K>
 
 impl<K> Default
 for Factorization<K>
- where K: Eq + Clone + Hash<Hasher> + Integer,
+ where K: Eq + Clone + Hash + Integer,
 {
 	/// Creates a Factorization representing `1`.
 	fn default() -> Self
@@ -252,7 +252,7 @@ for Factorization<K>
 
 impl<K> Mul<Factorization<K>>
 for Factorization<K>
- where K: Eq + Clone + Hash<Hasher> + Integer,
+ where K: Eq + Clone + Hash + Integer,
 {
 	type Output = Self;
 	fn mul(self: Self, other: Self) -> Self
