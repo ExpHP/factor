@@ -10,7 +10,6 @@ extern crate num;
 extern crate test;
 
 use std::collections::HashMap;
-use std::num::{ToPrimitive,FromPrimitive}; // and regret it
 use std::hash::{Hash,Hasher};
 use std::ops::{Shr,Rem};
 use std::rand::Rng;
@@ -35,7 +34,7 @@ pub struct PollardBrentFactorizer<T>;
 
 impl<T> Factorizer<T>
 for PollardBrentFactorizer<T>
- where T: Eq + Clone + FromPrimitive + ToPrimitive + Zero + One + Integer + Shr<usize, Output=T> + Hash<Hasher> + SampleRange + Int,
+ where T: Eq + Clone + Zero + One + Integer + Shr<usize, Output=T> + Hash<Hasher> + SampleRange + Int,
 {
 	/// Produce a single factor of `x`.  PollardBrentFactorizer is nondeterministic,
 	/// and may sometimes fail to produce a non-trivial factor for composite `x`.

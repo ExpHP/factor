@@ -9,7 +9,6 @@
 extern crate num;
 extern crate test;
 
-use std::num::{ToPrimitive,FromPrimitive}; // and regret it
 use std::iter::range_step;
 use std::ops::Shr;
 use std::fmt::Debug;
@@ -56,7 +55,7 @@ impl PrimeSieve
 
 impl<T> PrimeTester<T>
 for PrimeSieve
- where T: Eq + Clone + ToPrimitive + FromPrimitive + Integer,
+ where T: Eq + Clone + Integer,
 {
 	//! All of the work involved in identifying prime numbers with a PrimeSieve
 	//!  is done during the sieve's construction, so a PrimeSieve can test primality
@@ -114,7 +113,7 @@ pub struct MillerRabinTester<T>;
 // TODO: implement different choices of witnesses for deterministic miller-rabin (and
 //         have them validate their input against the max number for which they work)
 impl<T> MillerRabinTester<T>
- where T: Eq + Clone + ToPrimitive + FromPrimitive + Integer,
+ where T: Eq + Clone + Integer,
 {
 	/// Produces some set of numbers in the half-open interval `[0,x)` to use
 	///  as potential witnesses for the Miller Rabin Test.
@@ -140,7 +139,7 @@ impl<T> MillerRabinTester<T>
 
 impl<T> PrimeTester<T>
 for MillerRabinTester<T>
- where T: Eq + Clone + ToPrimitive + FromPrimitive + Integer + Shr<usize, Output=T> + Debug,
+ where T: Eq + Clone + Integer + Shr<usize, Output=T> + Debug,
 {
 	fn is_prime(self: &Self, x: &T) -> bool
 	{
@@ -191,7 +190,7 @@ for MillerRabinTester<T>
 // Decomposes a number `x` into the form `2.pow(k) * d` where `d` is odd,
 //  returning `(k,d)`.
 fn decompose_pow2_odd<T>(x: T) -> (T, T)
- where T: Eq + Clone + ToPrimitive + FromPrimitive + Integer + Shr<usize, Output=T>,
+ where T: Eq + Clone + Integer + Shr<usize, Output=T>,
 {
 	let mut remaining = x;
 	let mut pow2: T = Zero::zero();

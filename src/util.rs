@@ -10,7 +10,6 @@ extern crate num;
 extern crate test;
 
 use std::collections::hash_map::HashMap;
-use std::num::{ToPrimitive,FromPrimitive}; // and regret it
 use std::hash::Hash;
 use std::ops::Shr;
 use std::fmt::Debug;
@@ -51,7 +50,7 @@ fn bench_gcd(b: &mut Bencher) {
 /// Performs an integer square root, returning the largest integer whose square is not
 ///  greater than the argument.
 pub fn isqrt<T>(n: T) -> T
- where T: Clone + FromPrimitive + ToPrimitive + Zero + Integer + Shr<usize, Output=T>,
+ where T: Clone + Zero + Integer + Shr<usize, Output=T>,
 {
 	isqrt_fast(n.clone()).or_else(
 		|| Some(isqrt_safe(n.clone()))
@@ -70,8 +69,8 @@ pub fn literal<T>(n: isize) -> T
 
 /// Computes `pow(x, power) % modulus` using exponentation by squaring.
 pub fn mod_pow<T,P>(x: T, power: P, modulus: T) -> T
- where T: Eq + Clone + ToPrimitive + FromPrimitive + Integer,
-       P: Eq + Clone + ToPrimitive + FromPrimitive + Integer + Shr<usize, Output=P>,
+ where T: Eq + Clone + Integer,
+       P: Eq + Clone + Integer + Shr<usize, Output=P>,
 {
 	let mut prod:T = One::one();
 	let mut remaining = power;
@@ -100,7 +99,7 @@ fn test_mod_pow()
 // isqrt helper methods
 
 fn isqrt_fast<T>(x: T) -> Option<T>
- where T: FromPrimitive + ToPrimitive,
+ where T: FromPrimitive,
 {
 	x.to_f64().and_then(|f| {
 		// Mantissa is 52 bits, and the square root takes half as many bits, so this
@@ -115,7 +114,7 @@ fn isqrt_fast<T>(x: T) -> Option<T>
 }
 
 fn isqrt_safe<T>(n: T) -> T
- where T: Clone + FromPrimitive + ToPrimitive + Zero + Integer + Shr<usize, Output=T>,
+ where T: Clone + Zero + Integer + Shr<usize, Output=T>,
 {
 	// NOTE: while I'd like to remove the Shr bound, replacing '>> 1' with '/ 2' makes this
 	//       algorithm take twice as long for BigInts :/

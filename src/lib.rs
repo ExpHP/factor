@@ -37,7 +37,6 @@ pub use util::gcd;
 
 use std::collections::HashMap;
 use std::hash::Hasher;
-use std::num::{ToPrimitive,FromPrimitive};
 use std::hash::Hash;
 use std::ops::Shr;
 
@@ -53,7 +52,7 @@ mod util;
 
 /// Factors a number using `DefaultFactorizer`.
 pub fn factorize<T>(x: T) -> Factorization<T>
- where T: Eq + Clone + FromPrimitive + ToPrimitive + Zero + One + Integer + Shr<usize, Output=T> + Hash<Hasher>
+ where T: Eq + Clone + Zero + One + Integer + Shr<usize, Output=T> + Hash<Hasher>
 {
 	DefaultFactorizer.factorize(x)
 }
