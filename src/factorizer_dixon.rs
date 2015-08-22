@@ -66,8 +66,8 @@ for DixonFactorizer<T>
 		let mut a_values: Vec<T> = Vec::new();
 		let mut b_factorizations: Vec<Factorization<T>> = Vec::new();
 
-		'a: for _ in (0us..a_count) {
-			for _ in (0us..self.max_attempts) {
+		'a: for _ in (0usize..a_count) {
+			for _ in (0usize..self.max_attempts) {
 
 				// a random number such that a < x and a*a > x.
 				let a = weak_rng().gen_range(a_min.clone(), x.clone());
@@ -161,7 +161,7 @@ fn factorize_limited<T>(x: T, primes: &Vec<T>) -> Option<Factorization<T>>
 	let mut c = x;
 	for p in primes.iter() {
 
-		let mut count = 0us;
+		let mut count = 0usize;
 		while c.is_multiple_of(p) {
 			c = c / p.clone();
 			count += 1;
@@ -180,9 +180,9 @@ fn factorize_limited<T>(x: T, primes: &Vec<T>) -> Option<Factorization<T>>
 
 #[test]
 fn factorize_limited_test() {
-	let primes = vec![2us, 5, 7];
-	assert_eq!(factorize_limited(1, &primes), Some(factorize(1us)));
-	assert_eq!(factorize_limited(2450, &primes), Some(factorize(2450us)));
+	let primes = vec![2usize, 5, 7];
+	assert_eq!(factorize_limited(1, &primes), Some(factorize(1usize)));
+	assert_eq!(factorize_limited(2450, &primes), Some(factorize(2450usize)));
 	assert_eq!(factorize_limited(22, &primes), None);   // 11 not in prime list
 	assert_eq!(factorize_limited(12, &primes), None);   // 3 not in prime list
 }
@@ -201,6 +201,7 @@ struct DixonBitmatrix {
 	rows:  Vec<DixonBitvec>,
 	width: usize,
 }
+
 
 impl DixonBitvec
 {
@@ -270,7 +271,7 @@ fn bit_matrix_from_factorizations<T>(factorizations: &Vec<Factorization<T>>, pri
 	let rows: Vec<DixonBitvec> = factorizations.iter().enumerate().map(|(row_index,fact)| {
 
 		// set elements equal to powers in factorization, mod 2
-		let elements: BitvSet = (0us..primes.len()).filter(|i| fact.get(&primes[*i]) % 2 == 1).collect();
+		let elements: BitvSet = (0usize..primes.len()).filter(|i| fact.get(&primes[*i]) % 2 == 1).collect();
 
 		// indices initially contains just the index for this row
 		let mut indices = BitvSet::new();
@@ -292,9 +293,9 @@ fn bit_matrix_from_factorizations<T>(factorizations: &Vec<Factorization<T>>, pri
 // Manipulate bit matrix into row echelon form
 fn bit_matrix_to_ref(matrix: &mut DixonBitmatrix)
 {
-	let mut target_row = 0us;
+	let mut target_row = 0usize;
 
-	for col in (0us..matrix.ncols()) {
+	for col in (0usize..matrix.ncols()) {
 
 		// Look for a leading 1 in this column
 		for source_row in (target_row..matrix.nrows()) {

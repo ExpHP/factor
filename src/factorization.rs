@@ -64,7 +64,7 @@ impl<K> Factorization<K>
 	pub fn from_factor(factor: K) -> Self
 	{
 		let mut map = HashMap::new();
-		map.insert(factor, 1us);
+		map.insert(factor, 1usize);
 
 		Factorization { powers: map }
 	}

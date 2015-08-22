@@ -206,10 +206,10 @@ fn decompose_pow2_odd<T>(x: T) -> (T, T)
 fn test_miller_vs_sieve()
 {
 	// Test against prime sieve
-	let limit = 20000us;
+	let limit = 20000usize;
 	let expected = PrimeSieve::new(limit).sieve;
 
-	for k in (0us..limit) {
+	for k in (0usize..limit) {
 		if MillerRabinTester.is_prime(&k) != expected[k] {
 			panic!("MillerRabinTester returned '{:?}' for {:?}", !expected[k], k);
 		}
@@ -221,7 +221,7 @@ fn test_miller_mersenne()
 {
 	// Miller-Rabin should ALWAYS identify a prime as such, no matter how large.
 	// (don't go too large, though, or the test will take a while :P)
-	for p in vec![19us, 31, 89, 107].into_iter() { // known p-values for some mersenne primes
+	for p in vec![19usize, 31, 89, 107].into_iter() { // known p-values for some mersenne primes
 		let one: BigUint = literal(1);
 		let two: BigUint = literal(2);
 		let mersenne: BigUint = num::pow(two,p) - one;

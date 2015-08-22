@@ -267,7 +267,7 @@ mod tests {
 		let factors = factorizer.factorize(x_t.clone());
 
 		// vector of expected powers
-		let mut expected = vec![0us; 15];
+		let mut expected = vec![0usize; 15];
 		expected[2]  = 1;
 		expected[11] = 2;
 
