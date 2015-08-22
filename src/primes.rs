@@ -9,7 +9,6 @@
 extern crate num;
 extern crate test;
 
-use std::iter::range_step;
 use std::ops::Shr;
 use std::fmt::Debug;
 
@@ -98,8 +97,8 @@ fn compute_sieve_of_eratosthenes(limit: usize) -> Vec<bool>
 
 	for p in (2..limit) {
 		if sieve[p] {
-			for multiple in range_step(p*p, limit, p) {
-//			for multiple in (p*p..limit).step(p) {  // future form of above?
+//			for multiple in range_step(p*p, limit, p) {
+			for multiple in (p*p..limit).step_by(p) {  // future form of above?
 				sieve[multiple] = false;
 			};
 		};

@@ -12,15 +12,14 @@ extern crate test;
 use std::collections::HashMap;
 use std::hash::{Hash,Hasher};
 use std::ops::{Shr,Rem};
-use std::rand::Rng;
-use std::rand::weak_rng;
-use std::rand::distributions::range::SampleRange;
 use std::mem::swap;
-use std::num::Int;
 
 use std::cmp::min;
 
 use num::{Zero, One, Integer};
+use rand::Rng;
+use rand::weak_rng;
+use rand::distributions::range::SampleRange;
 
 use factorize;
 use factorization::Factorization;
@@ -34,7 +33,7 @@ pub struct PollardBrentFactorizer<T>;
 
 impl<T> Factorizer<T>
 for PollardBrentFactorizer<T>
- where T: Eq + Clone + Zero + One + Integer + Shr<usize, Output=T> + Hash<Hasher> + SampleRange + Int,
+ where T: Eq + Clone + Zero + One + Integer + Shr<usize, Output=T> + Hash<Hasher> + SampleRange,
 {
 	/// Produce a single factor of `x`.  PollardBrentFactorizer is nondeterministic,
 	/// and may sometimes fail to produce a non-trivial factor for composite `x`.

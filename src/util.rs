@@ -16,7 +16,6 @@ use std::fmt::Debug;
 
 use num::bigint::{ToBigUint,BigUint};
 use num::{Zero,One,Integer};
-use std::num::Float;
 
 use test::Bencher;
 

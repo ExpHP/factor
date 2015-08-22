@@ -17,6 +17,7 @@
 
 extern crate num;
 extern crate test;
+extern crate rand;
 
 pub use primes::PrimeTester;
 pub use primes::PrimeSieve;

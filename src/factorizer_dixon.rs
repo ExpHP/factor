@@ -12,12 +12,12 @@ extern crate test;
 use std::collections::{HashMap,BitSet};
 use std::hash::{Hash,Hasher};
 use std::ops::{Shr,Rem};
-use std::rand::Rng;
-use std::rand::weak_rng;
-use std::rand::distributions::range::SampleRange;
 use std::mem::swap;
 
 use num::{Zero, One, Integer};
+use rand::Rng;
+use rand::weak_rng;
+use rand::distributions::range::SampleRange;
 
 use factorize;
 use factorization::Factorization;
