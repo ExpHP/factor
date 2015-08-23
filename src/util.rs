@@ -37,8 +37,8 @@ pub fn gcd<T>(a: T,  b: T) -> T
 
 #[bench]
 fn bench_gcd(b: &mut Bencher) {
-	use std::rand::weak_rng;
-	use std::rand::Rng;
+	use rand::weak_rng;
+	use rand::Rng;
 	let mut rng = weak_rng();
 	b.iter(|| {
 		let a = rng.gen_range(100000u32,1000000u32);
@@ -145,13 +145,13 @@ fn bench_safe(b: &mut Bencher) {
 #[bench]
 fn bench_safe_bigint(b: &mut Bencher) {
 	b.iter(|| {
-		(0usize..1000).map(|a| isqrt_safe::<BigUint>(FromPrimitive::from_uint(a).unwrap())).collect::<Vec<BigUint>>()
+		(0usize..1000).map(|a| isqrt_safe::<BigUint>(FromPrimitive::from_usize(a).unwrap())).collect::<Vec<BigUint>>()
 	})
 }
 
 #[bench]
 fn bench_safe_massive_bigint(b: &mut Bencher) {
-	use std::rand::XorShiftRng;
+	use rand::XorShiftRng;
 	use num::bigint::RandBigInt;
 	let mut r = XorShiftRng::new_unseeded();
 	b.iter(|| {
@@ -175,8 +175,8 @@ fn test_isqrt_consistency()
 mod tests {
 	extern crate test;
 	use super::*;
-	use std::num::FromPrimitive;
-	use std::num::ToPrimitive;
+	use num::FromPrimitive;
+	use num::ToPrimitive;
 	use num::bigint::{ToBigUint,BigUint};
 
 	// need to test isqrt with BigInt more rigorously

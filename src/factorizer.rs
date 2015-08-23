@@ -251,6 +251,7 @@ mod tests {
 
 	use num::{BigUint, BigInt};
 	use num::{Zero, One, Integer};
+	use num::{FromPrimitive, ToPrimitive};
 	use test::Bencher;
 
 	use util::literal;
@@ -259,7 +260,7 @@ mod tests {
 
 	//  A simple test to factorize 242 as an arbitrary data type using an arbitrary factorizer.
 	fn test_242<T, U>(factorizer: U)
-	 where T: Eq + Clone + Debug + Hash + Integer,
+	 where T: Eq + Clone + Debug + Hash + Integer + FromPrimitive,
 	       U: Factorizer<T>,
 	{
 		// 242 = 2 * 11 * 11
@@ -274,8 +275,8 @@ mod tests {
 
 		// Check factorization against expected		
 		for (k,v) in expected.iter().enumerate() {
-			let k_t = FromPrimitive::from_uint(k).unwrap();  // cast k to T
-			let v_t = FromPrimitive::from_uint(*v).unwrap(); // cast v to whatever the heck it is today
+			let k_t = FromPrimitive::from_usize(k).unwrap();  // cast k to T
+			let v_t = FromPrimitive::from_usize(*v).unwrap(); // cast v to whatever the heck it is today
 			assert_eq!(factors.get(&k_t), v_t);
 		}
 	}
@@ -305,17 +306,17 @@ mod tests {
 	}
 
 	fn make_list<F,T>(factorizer: F, limit: T) -> ListFactorizer<T>
-	 where F: Factorizer<T>,
-	       T: Eq + Clone + Debug + Hash + Integer,
+	 where F: 'static + Factorizer<T>,
+	       T: Eq + Clone + Debug + Hash + Integer + FromPrimitive + ToPrimitive,
 	{
 		return ListFactorizer::new(Box::new(factorizer), limit);
 	}
 
 	fn make_list_stubborn<F,T>(factorizer: F, limit: T) -> ListFactorizer<T>
-	 where F: Factorizer<T>,
-	       T: Eq + Clone + Debug + Hash + Integer,
+	 where F: 'static + Factorizer<T>,
+	       T: 'static + Eq + Clone + Debug + Hash + Integer + FromPrimitive + ToPrimitive,
 	{
-		let primes = PrimeSieve::new(limit.to_uint().unwrap());
+		let primes = PrimeSieve::new(limit.to_usize().unwrap());
 		let stubborn = StubbornFactorizer::new(primes, factorizer);
 		return ListFactorizer::new(Box::new(stubborn), limit);
 	}
@@ -388,7 +389,7 @@ mod tests {
 
 	#[bench]
 	fn bench_ten_8_rough_pollard(b: &mut Bencher) {
-		let factorizer = StubbornFactorizer::new(MillerRabinTester, PollardBrentFactorizer::<u64>);
+		let factorizer = StubbornFactorizer::new(MillerRabinTester, PollardBrentFactorizer);
 		b.iter(|| {
 			factorizer.get_factor(&TEN_8_ROUGH)
 		});
