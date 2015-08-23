@@ -13,13 +13,13 @@ use std::collections::HashMap;
 use std::hash::Hash;
 
 use num;
-use num::{Zero,One,Integer,FromPrimitive};
-
+use num::{One,FromPrimitive};
+use num::Num;
 
 /// TODO
 #[derive(Eq,PartialEq,Debug,Clone)]
 pub struct Factorization<K>
- where K: Eq + Clone + Integer + Hash,
+ where K: Eq + Hash,
 {
 	// powers are currently usize for consistency with the pow() functions
 	//  in both std::num and the num crate.
@@ -40,17 +40,19 @@ pub struct Factorization<K>
 //           use them responsibly.
 
 impl<K> Factorization<K>
- where K: Eq + Clone + Integer + Hash,
+ where K: Eq + Hash,
 {
 
-	pub fn set(self: &mut Self, key: K, pwr: usize) {
+	pub fn set(self: &mut Self, key: K, pwr: usize)
+	{
 		match pwr {
 			0 => self.powers.remove(&key),
 			_ => self.powers.insert(key, pwr),
 		};
 	}
 
-	pub fn get(self: &Self, key: &K) -> usize {
+	pub fn get(self: &Self, key: &K) -> usize
+	{
 		match self.powers.get(key) {
 			None      => 0,
 			Some(pwr) => *pwr,
@@ -79,6 +81,7 @@ impl<K> Factorization<K>
 	/// assert_eq!(f.product(), 20);
 	/// ```
 	pub fn product(self: &Self) -> K
+	 where K: Clone + One,
 	{
 		let mut result: K = One::one();
 		for (k,v) in self.powers.iter() {
@@ -100,7 +103,7 @@ impl<K> Factorization<K>
 	/// assert_eq!(f.count_divisors(), 6);
 	/// ```
 	pub fn count_divisors(self: &Self) -> K
-	 where K: FromPrimitive,
+	 where K: Clone + FromPrimitive + One,
 	{
 		let mut result: K = One::one();
 		for (_,v) in self.powers.iter() {
@@ -121,6 +124,7 @@ impl<K> Factorization<K>
 	/// assert_eq!(f.sum_divisors(), 42);
 	/// ```
 	pub fn sum_divisors(self: &Self) -> K
+	 where K: Clone + One + Num,
 	{
 		// A geometric series for each factor
 		let mut result: K = One::one();
@@ -143,6 +147,7 @@ impl<K> Factorization<K>
 	/// assert_eq!(f.totient(), 8);
 	/// ```
 	pub fn totient(self: &Self) -> K
+	 where K: Clone + One + Num,
 	{
 		let mut result: K = One::one();
 		for (k,v) in self.powers.iter() {
@@ -175,6 +180,7 @@ impl<K> Factorization<K>
 	/// assert_eq!(f.sqrt().unwrap().product(), 10);  // sqrt(100)
 	/// ```
 	pub fn sqrt(self: &Self) -> Option<Self>
+	 where K: Clone,
 	{
 		let mut result = self.clone();
 		for (_,v) in result.powers.iter_mut() {
@@ -190,6 +196,7 @@ impl<K> Factorization<K>
 
 	// TODO: Docs & test
 	pub fn pow(self: &Self, pwr: usize) -> Self
+	 where K: Clone,
 	{
 		let mut result = self.clone();
 		for (_,v) in result.powers.iter_mut() {
@@ -200,6 +207,7 @@ impl<K> Factorization<K>
 
 	// TODO: Docs & test
 	pub fn gcd(self: &Self, other: &Self) -> Self
+	 where K: Clone,
 	{
 		// Iterate through shorter list
 		if other.powers.len() < self.powers.len() {
@@ -215,6 +223,7 @@ impl<K> Factorization<K>
 
 	// TODO: Docs & test
 	pub fn lcm(self: &Self, other: &Self) -> Self
+	 where K: Clone,
 	{
 		let mut result = self.clone();
 		for (k,v) in other.powers.clone().into_iter() {
@@ -230,7 +239,7 @@ impl<K> Factorization<K>
 
 impl<K> One
 for Factorization<K>
- where K: Eq + Clone + Hash + Integer,
+ where K: Eq + Clone + Hash,
 {
 	/// Creates a Factorization representing `1`.
 	fn one() -> Self
@@ -240,7 +249,7 @@ for Factorization<K>
 
 impl<K> Default
 for Factorization<K>
- where K: Eq + Clone + Hash + Integer,
+ where K: Eq + Clone + Hash,
 {
 	/// Creates a Factorization representing `1`.
 	fn default() -> Self
@@ -250,7 +259,7 @@ for Factorization<K>
 
 impl<K> Mul<Factorization<K>>
 for Factorization<K>
- where K: Eq + Clone + Hash + Integer,
+ where K: Eq + Clone + Hash,
 {
 	type Output = Self;
 	fn mul(self: Self, other: Self) -> Self
