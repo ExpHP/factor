@@ -153,7 +153,11 @@ pub struct ListFactorizer<T>
 impl<T> ListFactorizer<T>
  where T: Eq + Clone + Hash + Integer + FromPrimitive + ToPrimitive,
 {
-	fn new(factorizer: Box<Factorizer<T>>, n: T) -> Self {
+	/// Constructs a `ListFactorizer` containing factors for the numbers `0..n`, using the
+	///  provided `factorizer` to generate them.  Be sure to wrap any nondeterministic
+	///  factorizer in a `StubbornFactorizer` beforehand to ensure that only correct results
+	///  get cached in the list.
+	fn new(n: T, factorizer: &Factorizer<T>) -> Self {
 		ListFactorizer {
 			factors: num::iter::range(literal(0), n).map(|x| factorizer.get_factor(&x)).collect(),
 		}
@@ -302,19 +306,19 @@ mod tests {
 	}
 
 	fn make_list<F,T>(factorizer: F, limit: T) -> ListFactorizer<T>
-	 where F: 'static + Factorizer<T>,
+	 where F: Factorizer<T>,
 	       T: Eq + Clone + Debug + Hash + Integer + FromPrimitive + ToPrimitive,
 	{
-		return ListFactorizer::new(Box::new(factorizer), limit);
+		return ListFactorizer::new(limit, &factorizer);
 	}
 
 	fn make_list_stubborn<F,T>(factorizer: F, limit: T) -> ListFactorizer<T>
-	 where F: 'static + Factorizer<T>,
-	       T: 'static + Eq + Clone + Debug + Hash + Integer + FromPrimitive + ToPrimitive,
+	 where F: Factorizer<T>,
+	       T: Eq + Clone + Debug + Hash + Integer + FromPrimitive + ToPrimitive,
 	{
 		let primes = PrimeSieve::new(limit.to_usize().unwrap());
 		let stubborn = StubbornFactorizer::new(primes, factorizer);
-		return ListFactorizer::new(Box::new(stubborn), limit);
+		return ListFactorizer::new(limit, &stubborn);
 	}
 
 	// Builds a ListFactorizer up to some limit and verifies it against a list built
