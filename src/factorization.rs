@@ -6,14 +6,13 @@
 // This file may not be copied, modified, or distributed except according
 // to those terms.
 
-extern crate num;
-
 use std::default::Default;
 use std::ops::{Add,Sub,Mul,Div,Rem};
 use std::cmp::{min,max};
 use std::collections::HashMap;
 use std::hash::Hash;
 
+use num;
 use num::{Zero,One,Integer,FromPrimitive};
 
 

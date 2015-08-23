@@ -6,9 +6,6 @@
 // This file may not be copied, modified, or distributed except according
 // to those terms.
 
-extern crate num;
-extern crate test;
-
 use std::collections::HashMap;
 use std::hash::Hash;
 use std::ops::{Shr,Rem};

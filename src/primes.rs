@@ -6,12 +6,10 @@
 // This file may not be copied, modified, or distributed except according
 // to those terms.
 
-extern crate num;
-extern crate test;
-
 use std::ops::Shr;
 use std::fmt::Debug;
 
+use num;
 use num::{Zero,One,Integer};
 use num::{ToPrimitive,FromPrimitive};
 use num::BigUint;

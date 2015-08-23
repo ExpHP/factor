@@ -6,9 +6,6 @@
 // This file may not be copied, modified, or distributed except according
 // to those terms.
 
-extern crate num;
-extern crate test;
-
 use std::collections::hash_map::HashMap;
 use std::hash::Hash;
 use std::ops::Shr;
@@ -173,7 +170,6 @@ fn test_isqrt_consistency()
 
 #[cfg(test)]
 mod tests {
-	extern crate test;
 	use super::*;
 	use num::FromPrimitive;
 	use num::ToPrimitive;

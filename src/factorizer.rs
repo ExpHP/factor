@@ -6,15 +6,13 @@
 // This file may not be copied, modified, or distributed except according
 // to those terms.
 
-extern crate num;
-extern crate test;
-
 use std::collections::HashMap;
 use std::hash::Hash;
 use std::ops::{Shr,Rem};
 use std::fmt::Debug;
 use std::marker::PhantomData;
 
+use num;
 use num::{Zero, One, Integer};
 use num::{FromPrimitive, ToPrimitive};
 
@@ -240,15 +238,13 @@ for StubbornFactorizer<P,F,T>
 
 #[cfg(test)]
 mod tests {
-	extern crate num;
-	extern crate test;
-
 	use super::*;
 
 	use std::collections::hash_map::HashMap;
 	use std::hash::Hash;
 	use std::fmt::Debug;
 
+	use num;
 	use num::{BigUint, BigInt};
 	use num::{Zero, One, Integer};
 	use num::{FromPrimitive, ToPrimitive};
