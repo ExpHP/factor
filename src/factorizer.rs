@@ -38,6 +38,11 @@ pub use factorizer_pollard::PollardBrentFactorizer;
 //trait Factorable: Eq + Clone + Hash + num::Integer { }
 
 
+// TODO: There should be a statically typed distinction for nondeterministic factorizers
+//       which can fail to produce factors.  Alternatively, the library could simply not
+//       publicly export any of these factorizers (exporting only reliable StubbornFactorizer
+//       wrappers instead).
+
 /// An interface for factorizing positive integers.
 pub trait Factorizer<T>
  where T: Eq + Clone + Zero + One + Integer + Hash
@@ -69,7 +74,7 @@ pub trait Factorizer<T>
 
 		// Non-composite point to themselves
 		if a == x {
-			return Factorization::from_factor(a);
+			return Factorization::from_prime(a);
 
 		// Composite numbers
 		} else {

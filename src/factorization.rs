@@ -16,7 +16,33 @@ use num;
 use num::{One,FromPrimitive};
 use num::Num;
 
-/// TODO
+// TODO After all this time I still don't like the name; it's too easy to
+//  confuse with `Factorizer`... yet I can't think of a better alternative.
+//  `PrimeFactorMap`?... bleh.
+/// An integer stored as its prime factorization.
+///
+/// A `Factorization` represents a non-negative integer stored in the form
+///
+///     pow(p1, n1) * pow(p2, n2) * ... * pow(pN, nN)
+///
+/// where `p1, p2, ...` are prime numbers (or zero) and `n1, n2, ...` are positive
+/// integers. Some properties are easier to compute in this form, such as the euler
+/// totient, or a sum of divisors. Also of note is that because the prime factorization
+/// of any given number is unique, any two `Factorization`s constructed from the same
+/// `x` are equal.
+///
+/// A special case is permitted to allow zero, defined as `{0: 1}`. Zero to any greater
+/// power, or in combination with other factors is not permitted. Also worthy of note
+/// is that the factorization of `1` is an empty map.
+/// Negative numbers are not permitted as most of the special mathematical properties
+/// are not defined for them.
+///
+/// One caveat:  It is not feasible for `Factorization` to enforce that the prime
+///  factors it is built from are actually prime.  This is the job of the
+///  `Factorizer` used to produce it!  The behavior of any mathematical method
+///  on a `Factorization` with a composite factor is **undefined**. (in the sense
+///  of nonsensical results; not in the sense that the safety guidelines of Rust
+///  may be violated)
 #[derive(Eq,PartialEq,Debug,Clone)]
 pub struct Factorization<K>
  where K: Eq + Hash,
@@ -28,21 +54,14 @@ pub struct Factorization<K>
 
 // TODO: some of Factorization's methods need to be special cased for Zero
 
-// TODO: While Factorization is intended to only store prime numbers (and zero)
-//        as factors, it will currently accept anything.
-//
-//       Some alternatives under consideration:
-//         * a Prime data type (possibly one form of a "known primality" enum
-//             type) for keys
-//         * allow non-prime keys.  The issue with this is that many of the
-//           math methods (gcd, totient, etc.) are only worth implementing
-//           for the all-prime case, and the user would have to be trusted to
-//           use them responsibly.
-
 impl<K> Factorization<K>
  where K: Eq + Hash,
 {
 
+	/// Set the power of a prime factor in the `Factorization`. `key` is
+	///  assumed to be prime (or zero). Note that while composite numbers
+	///  may be accepted, the behavior of the resulting `Factorization` is
+	///  ill-defined.
 	pub fn set(self: &mut Self, key: K, pwr: usize)
 	{
 		match pwr {
@@ -51,6 +70,9 @@ impl<K> Factorization<K>
 		};
 	}
 
+	/// Get the power of a prime factor in the `Factorization`. `key` is
+	///  assumed to be prime (or zero). The value returned for non-prime
+	///  keys is undefined.
 	pub fn get(self: &Self, key: &K) -> usize
 	{
 		match self.powers.get(key) {
@@ -59,10 +81,13 @@ impl<K> Factorization<K>
 		}
 	}
 
-	pub fn from_factor(factor: K) -> Self
+	/// Create a `Factorization` for the given number, which is assumed to be
+	///  prime (or zero).  Note that while composite numbers may be accepted,
+	///  the behavior of the resulting `Factorization` is ill-defined.
+	pub fn from_prime(prime: K) -> Self
 	{
 		let mut map = HashMap::new();
-		map.insert(factor, 1usize);
+		map.insert(prime, 1usize);
 
 		Factorization { powers: map }
 	}
@@ -83,6 +108,7 @@ impl<K> Factorization<K>
 	pub fn product(self: &Self) -> K
 	 where K: Clone + One,
 	{
+		// product( pow(p[i], n[i]) )
 		let mut result: K = One::one();
 		for (k,v) in self.powers.iter() {
 			result = result * num::pow(k.clone(), v.clone());
@@ -105,6 +131,8 @@ impl<K> Factorization<K>
 	pub fn count_divisors(self: &Self) -> K
 	 where K: Clone + FromPrimitive + One,
 	{
+		// product( n[i]+1 );  we're counting the possible ways to select a power
+		//                      from 0 to n[i] (inclusive) for each prime p[i]
 		let mut result: K = One::one();
 		for (_,v) in self.powers.iter() {
 			result = result * FromPrimitive::from_usize(v.clone() + 1).unwrap();
@@ -149,6 +177,7 @@ impl<K> Factorization<K>
 	pub fn totient(self: &Self) -> K
 	 where K: Clone + One + Num,
 	{
+		// product( (p[i] - 1) * pow(p[i], n[i]-1) )
 		let mut result: K = One::one();
 		for (k,v) in self.powers.iter() {
 			result = result * num::pow(k.clone(), v.clone() - 1);
@@ -160,8 +189,6 @@ impl<K> Factorization<K>
 	// TODO: pending unboxed abstract types 
 	// fn iter_divisors(self: &Self) -> Iterator<K>
 
-	// TODO: Docs
-	// Returns None if any factors have odd powers
 	/// Get the square root.
 	///
 	/// If the `Factorization` represents a perfect square, returns
