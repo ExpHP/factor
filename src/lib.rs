@@ -30,7 +30,7 @@ pub use factorizer::Factorizer;
 pub use factorizer::TrialDivisionFactorizer;
 pub use factorizer::StubbornFactorizer;
 //pub use factorizer::FermatFactorizer;
-pub use factorizer_dixon::DixonFactorizer;
+//pub use factorizer_dixon::DixonFactorizer; // FIXME broken, has disabled tests
 pub use factorizer_pollard::PollardBrentFactorizer;
 //pub use factorizer::GeneralFactorizer;
 pub use factorizer::SafeFactorizer;
