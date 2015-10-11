@@ -23,7 +23,9 @@ use num::Num;
 ///
 /// A `Factorization` represents a non-negative integer stored in the form
 ///
-///     pow(p1, n1) * pow(p2, n2) * ... * pow(pN, nN)
+/// ```text
+/// pow(p1, n1) * pow(p2, n2) * ... * pow(pN, nN)
+/// ```
 ///
 /// where `p1, p2, ...` are prime numbers (or zero) and `n1, n2, ...` are positive
 /// integers. Some properties are easier to compute in this form, such as the euler
