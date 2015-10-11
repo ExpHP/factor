@@ -40,6 +40,9 @@ pub use factorization::Factorization;
 pub use util::isqrt;
 pub use util::gcd;
 
+use util::literal;
+
+use std::iter::FromIterator;
 use std::collections::HashMap;
 use std::hash::Hash;
 use std::ops::Shr;
@@ -61,3 +64,24 @@ pub fn factorize<T>(x: T) -> Factorization<T>
 {
 	DefaultFactorizer.factorize(x)
 }
+
+/// Collects all primes up to a limit (inclusive)
+///
+/// # Example
+///
+/// ```
+/// let v: Vec<u64> = primes_upto(17);
+/// assert_eq!(v, vec![2, 3, 5, 7, 11, 13, 17]);
+/// assert!(false);
+/// ```
+pub fn primes_upto<Out>(limit: usize) -> Out
+ where Out: FromIterator<u64>
+{
+	let max = limit + 1;
+	let sieve = primes::PrimeSieve::new(max);
+	(2..max).step_by(2)
+		.filter(|&i| sieve.is_prime(&i))
+		.map(|i| i as u64)
+		.collect()
+}
+
