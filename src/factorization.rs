@@ -10,6 +10,7 @@ use std::default::Default;
 use std::ops::{Add,Sub,Mul,Div,Rem};
 use std::cmp::{min,max};
 use std::collections::HashMap;
+use std::collections::hash_map;
 use std::hash::Hash;
 
 use num;
@@ -260,6 +261,16 @@ impl<K> Factorization<K>
 		};
 		result
 	}
+
+	/// Iterate over unique prime factors.
+	pub fn primes(self: &Self) -> hash_map::Keys<K, usize> { self.powers.keys() }
+	/// Iterate over `(prime, power)` pairs.
+	pub fn iter(self: &Self) -> hash_map::Iter<K, usize> { self.powers.iter() }
+
+	/// Immutably borrow the underlying `HashMap`.
+	pub fn as_hash_map(self: &Self) -> &HashMap<K, usize> { &self.powers }
+	/// Consume to obtain the underlying `HashMap`.
+	pub fn into_hash_map(self: Self) -> HashMap<K, usize> { self.powers }
 
 	// TODO: Reasonable (?) methods to implement
 	// pub fn is_multiple_of(self: &Self, other: &Self) -> bool
