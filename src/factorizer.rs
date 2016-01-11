@@ -164,7 +164,7 @@ impl<T> ListFactorizer<T>
 	///  provided `factorizer` to generate them.  Be sure to wrap any nondeterministic
 	///  factorizer in a `StubbornFactorizer` beforehand to ensure that only correct results
 	///  get cached in the list.
-	fn new(n: T, factorizer: &Factorizer<T>) -> Self {
+	pub fn compute_new(n: T, factorizer: &Factorizer<T>) -> Self {
 		ListFactorizer {
 			factors: num::iter::range(literal(0), n).map(|x| factorizer.get_factor(&x)).collect(),
 		}
@@ -316,7 +316,7 @@ mod tests {
 	 where F: Factorizer<T>,
 	       T: Eq + Clone + Debug + Hash + Integer + FromPrimitive + ToPrimitive,
 	{
-		return ListFactorizer::new(limit, &factorizer);
+		return ListFactorizer::compute_new(limit, &factorizer);
 	}
 
 	fn make_list_stubborn<F,T>(factorizer: F, limit: T) -> ListFactorizer<T>
@@ -325,7 +325,7 @@ mod tests {
 	{
 		let primes = PrimeSieve::new(limit.to_usize().unwrap());
 		let stubborn = StubbornFactorizer::new(primes, factorizer);
-		return ListFactorizer::new(limit, &stubborn);
+		return ListFactorizer::compute_new(limit, &stubborn);
 	}
 
 	// Builds a ListFactorizer up to some limit and verifies it against a list built
