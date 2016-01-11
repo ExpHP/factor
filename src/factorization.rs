@@ -263,14 +263,42 @@ impl<K> Factorization<K>
 	}
 
 	/// Iterate over unique prime factors.
+	///
+	/// Item type is `&K`.
 	pub fn primes(self: &Self) -> hash_map::Keys<K, usize> { self.powers.keys() }
+
 	/// Iterate over `(prime, power)` pairs.
+	///
+	/// Item type is `(&K, &usize)`.
 	pub fn iter(self: &Self) -> hash_map::Iter<K, usize> { self.powers.iter() }
+
+	/// Consume to iterate over the `(prime, power)` pairs.
+	///
+	/// Item type is `(K, usize)`.
+	pub fn into_iter(self: Self) -> hash_map::IntoIter<K, usize> { self.powers.into_iter() }
 
 	/// Immutably borrow the underlying `HashMap`.
 	pub fn as_hash_map(self: &Self) -> &HashMap<K, usize> { &self.powers }
 	/// Consume to obtain the underlying `HashMap`.
 	pub fn into_hash_map(self: Self) -> HashMap<K, usize> { self.powers }
+
+	/// Construct from an iterator of `(prime, power)` pairs.
+	///
+	/// The primes must be unique, else behavior is unspecified.
+	///
+	/// Each `prime` must be prime (or zero), or else the resulting `Factorization`
+	///  will have ill-defined behavior.
+	pub fn from_iter<I:IntoIterator<Item=(K,usize)>>(iter: I) -> Self {
+		Factorization::from_hash_map(iter.into_iter().collect())
+	}
+
+	/// Construct from a `HashMap` of `prime => power`.
+	///
+	/// Each `prime` must be prime (or zero), or else the resulting `Factorization`
+	///  will have ill-defined behavior.
+	pub fn from_hash_map(powers: HashMap<K, usize>) -> Self {
+		Factorization { powers: powers }
+	}
 
 	// TODO: Reasonable (?) methods to implement
 	// pub fn is_multiple_of(self: &Self, other: &Self) -> bool
