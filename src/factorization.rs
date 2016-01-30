@@ -279,6 +279,8 @@ impl<K> Factorization<K>
 
 	/// Immutably borrow the underlying `HashMap`.
 	pub fn as_hash_map(self: &Self) -> &HashMap<K, usize> { &self.powers }
+	/// Mutably borrow the underlying `HashMap`.
+	pub fn as_mut_hash_map(self: &mut Self) -> &mut HashMap<K, usize> { &mut self.powers }
 	/// Consume to obtain the underlying `HashMap`.
 	pub fn into_hash_map(self: Self) -> HashMap<K, usize> { self.powers }
 
