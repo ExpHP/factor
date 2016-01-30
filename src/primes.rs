@@ -21,9 +21,9 @@ use util::mod_pow;
 pub trait PrimeTester<T>
  where T: Eq + Clone + Zero + One,
 {
-	fn is_prime(self: &Self, x: &T) -> bool;
+	fn is_prime(&self, x: &T) -> bool;
 
-	fn is_composite(self: &Self, x: &T) -> bool
+	fn is_composite(&self, x: &T) -> bool
 	{
 		if x == &Zero::zero() || x == &One::one() {
 			false
@@ -80,7 +80,7 @@ for PrimeSieve
 	///  lies outside the array.
 	// TODO: test panics
 	#[inline]
-	fn is_prime(self: &Self, x: &T) -> bool
+	fn is_prime(&self, x: &T) -> bool
 	{
 		self.sieve[x.to_usize().unwrap()]
 	}
@@ -112,7 +112,7 @@ impl MillerRabinTester
 	/// Produces some set of numbers in the half-open interval `[0,x)` to use
 	///  as potential witnesses for the Miller Rabin Test.
 	// TODO: a term like "witness" prolly isn't fit for public API without definition
-	pub fn collect_witnesses<T>(self: &Self, x: T) -> Vec<T>
+	pub fn collect_witnesses<T>(&self, x: T) -> Vec<T>
 	 where T: Eq + Clone + Integer + FromPrimitive,
 	{
 		// There's a couple of options here.
@@ -137,7 +137,7 @@ impl<T> PrimeTester<T>
 for MillerRabinTester
  where T: Eq + Clone + Integer + Shr<usize, Output=T> + Debug + FromPrimitive,
 {
-	fn is_prime(self: &Self, x: &T) -> bool
+	fn is_prime(&self, x: &T) -> bool
 	{
 		if *x < literal(2) { return false; }
 		if *x <= literal(3) { return *x >= literal(2); }

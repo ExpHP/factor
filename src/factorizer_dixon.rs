@@ -53,7 +53,7 @@ for DixonFactorizer<T>
 	///  Thus, the number it returns is also always prime.
 	///
 	/// The runtime scales linearly with the size of the smallest factor of `x`.
-	fn get_factor(self: &Self, x: &T) -> T
+	fn get_factor(&self, x: &T) -> T
 	{
 		// Step 1: Collect congruences of the form a^2 = b (mod x), where b < x
 		//          and b is smooth (composed only of small primes).
@@ -213,12 +213,12 @@ impl DixonBitvec
 	}
 
 	#[inline]
-	fn is_all_zero(self: &Self) -> bool {
+	fn is_all_zero(&self) -> bool {
 		self.elements.is_empty()
 	}
 
 	#[inline]
-	fn into_index_set(self: Self) -> BitSet {
+	fn into_index_set(self) -> BitSet {
 		self.indices
 	}
 
@@ -228,18 +228,18 @@ impl DixonBitmatrix
 {
 	// Matrix dimensions
 	#[inline]
-	fn nrows(self: &Self) -> usize { self.rows.len() }
+	fn nrows(&self) -> usize { self.rows.len() }
 	#[inline]
-	fn ncols(self: &Self) -> usize { self.width }
+	fn ncols(&self) -> usize { self.width }
 
 	// Index
 	#[inline]
-	fn get_elem(self: &Self, row: usize, col: usize) -> bool {
+	fn get_elem(&self, row: usize, col: usize) -> bool {
 		self.rows[row].elements.contains(&col)
 	}
 
 	#[inline]
-	fn swap_rows(self: &mut Self, i: usize, j: usize) {
+	fn swap_rows(&mut self, i: usize, j: usize) {
 		let temp = self.rows[i].clone();
 		self.rows[i] = self.rows[j].clone();
 		self.rows[j] = temp;
@@ -247,7 +247,7 @@ impl DixonBitmatrix
 
 	// Computes an XOR of rows src and dest, overwriting dest.
 	#[inline]
-	fn xor_update_row(self: &mut Self, src: usize, dest: usize) {
+	fn xor_update_row(&mut self, src: usize, dest: usize) {
 		let elems = self.rows[src].elements.clone();
 		let inds  = self.rows[src].indices.clone();
 		self.rows[dest].elements.symmetric_difference_with(&elems);
@@ -255,7 +255,7 @@ impl DixonBitmatrix
 	}
 
 	#[inline]
-	fn into_rows(self: Self) -> Vec<DixonBitvec> {
+	fn into_rows(self) -> Vec<DixonBitvec> {
 		self.rows
 	}
 }

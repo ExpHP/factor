@@ -65,7 +65,7 @@ impl<K> Factorization<K>
 	///  assumed to be prime (or zero). Note that while composite numbers
 	///  may be accepted, the behavior of the resulting `Factorization` is
 	///  ill-defined.
-	pub fn set(self: &mut Self, key: K, pwr: usize)
+	pub fn set(&mut self, key: K, pwr: usize)
 	{
 		match pwr {
 			0 => self.powers.remove(&key),
@@ -76,7 +76,7 @@ impl<K> Factorization<K>
 	/// Get the power of a prime factor in the `Factorization`. `key` is
 	///  assumed to be prime (or zero). The value returned for non-prime
 	///  keys is undefined.
-	pub fn get(self: &Self, key: &K) -> usize
+	pub fn get(&self, key: &K) -> usize
 	{
 		match self.powers.get(key) {
 			None      => 0,
@@ -108,7 +108,7 @@ impl<K> Factorization<K>
 	/// let f = factorize(20u64);
 	/// assert_eq!(f.product(), 20);
 	/// ```
-	pub fn product(self: &Self) -> K
+	pub fn product(&self) -> K
 	 where K: Clone + One,
 	{
 		// product( pow(p[i], n[i]) )
@@ -131,7 +131,7 @@ impl<K> Factorization<K>
 	/// let f = factorize(20u64);
 	/// assert_eq!(f.count_divisors(), 6);
 	/// ```
-	pub fn count_divisors(self: &Self) -> K
+	pub fn count_divisors(&self) -> K
 	 where K: Clone + FromPrimitive + One,
 	{
 		// product( n[i]+1 );  we're counting the possible ways to select a power
@@ -154,7 +154,7 @@ impl<K> Factorization<K>
 	/// let f = factorize(20u64);
 	/// assert_eq!(f.sum_divisors(), 42);
 	/// ```
-	pub fn sum_divisors(self: &Self) -> K
+	pub fn sum_divisors(&self) -> K
 	 where K: Clone + One + Num,
 	{
 		// A geometric series for each factor
@@ -177,7 +177,7 @@ impl<K> Factorization<K>
 	/// let f = factorize(20u64);
 	/// assert_eq!(f.totient(), 8);
 	/// ```
-	pub fn totient(self: &Self) -> K
+	pub fn totient(&self) -> K
 	 where K: Clone + One + Num,
 	{
 		// product( (p[i] - 1) * pow(p[i], n[i]-1) )
@@ -190,7 +190,7 @@ impl<K> Factorization<K>
 	}
 
 	// TODO: pending unboxed abstract types 
-	// fn iter_divisors(self: &Self) -> Iterator<K>
+	// fn iter_divisors(&self) -> Iterator<K>
 
 	/// Get the square root.
 	///
@@ -209,7 +209,7 @@ impl<K> Factorization<K>
 	/// f = f * factorize(5);
 	/// assert_eq!(f.sqrt().unwrap().product(), 10);  // sqrt(100)
 	/// ```
-	pub fn sqrt(self: &Self) -> Option<Self>
+	pub fn sqrt(&self) -> Option<Self>
 	 where K: Clone,
 	{
 		let mut result = self.clone();
@@ -225,7 +225,7 @@ impl<K> Factorization<K>
 	}
 
 	// TODO: Docs & test
-	pub fn pow(self: &Self, pwr: usize) -> Self
+	pub fn pow(&self, pwr: usize) -> Self
 	 where K: Clone,
 	{
 		let mut result = self.clone();
@@ -236,7 +236,7 @@ impl<K> Factorization<K>
 	}
 
 	// TODO: Docs & test
-	pub fn gcd(self: &Self, other: &Self) -> Self
+	pub fn gcd(&self, other: &Self) -> Self
 	 where K: Clone,
 	{
 		// Iterate through shorter list
@@ -252,7 +252,7 @@ impl<K> Factorization<K>
 	}
 
 	// TODO: Docs & test
-	pub fn lcm(self: &Self, other: &Self) -> Self
+	pub fn lcm(&self, other: &Self) -> Self
 	 where K: Clone,
 	{
 		let mut result = self.clone();
@@ -265,24 +265,24 @@ impl<K> Factorization<K>
 	/// Iterate over unique prime factors.
 	///
 	/// Item type is `&K`.
-	pub fn primes(self: &Self) -> hash_map::Keys<K, usize> { self.powers.keys() }
+	pub fn primes(&self) -> hash_map::Keys<K, usize> { self.powers.keys() }
 
 	/// Iterate over `(prime, power)` pairs.
 	///
 	/// Item type is `(&K, &usize)`.
-	pub fn iter(self: &Self) -> hash_map::Iter<K, usize> { self.powers.iter() }
+	pub fn iter(&self) -> hash_map::Iter<K, usize> { self.powers.iter() }
 
 	/// Consume to iterate over the `(prime, power)` pairs.
 	///
 	/// Item type is `(K, usize)`.
-	pub fn into_iter(self: Self) -> hash_map::IntoIter<K, usize> { self.powers.into_iter() }
+	pub fn into_iter(self) -> hash_map::IntoIter<K, usize> { self.powers.into_iter() }
 
 	/// Immutably borrow the underlying `HashMap`.
-	pub fn as_hash_map(self: &Self) -> &HashMap<K, usize> { &self.powers }
+	pub fn as_hash_map(&self) -> &HashMap<K, usize> { &self.powers }
 	/// Mutably borrow the underlying `HashMap`.
-	pub fn as_mut_hash_map(self: &mut Self) -> &mut HashMap<K, usize> { &mut self.powers }
+	pub fn as_mut_hash_map(&mut self) -> &mut HashMap<K, usize> { &mut self.powers }
 	/// Consume to obtain the underlying `HashMap`.
-	pub fn into_hash_map(self: Self) -> HashMap<K, usize> { self.powers }
+	pub fn into_hash_map(self) -> HashMap<K, usize> { self.powers }
 
 	/// Construct from an iterator of `(prime, power)` pairs.
 	///
@@ -303,7 +303,7 @@ impl<K> Factorization<K>
 	}
 
 	// TODO: Reasonable (?) methods to implement
-	// pub fn is_multiple_of(self: &Self, other: &Self) -> bool
+	// pub fn is_multiple_of(&self, other: &Self) -> bool
 }
 
 
@@ -332,7 +332,7 @@ for Factorization<K>
  where K: Eq + Clone + Hash,
 {
 	type Output = Self;
-	fn mul(self: Self, other: Self) -> Self
+	fn mul(self, other: Self) -> Self
 	{
 		let mut result = self;
 		for (k,v) in other.powers.into_iter() {

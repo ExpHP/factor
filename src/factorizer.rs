@@ -62,11 +62,11 @@ pub trait Factorizer<T>
 	/// 
 	/// Keep in mind that, in addition to the value returned, another factor can be obtained by
 	///  dividing `x` by the value.
-	fn get_factor(self: &Self, x: &T) -> T;
+	fn get_factor(&self, x: &T) -> T;
 
 	/// Builds a complete prime factorization of a number.  A default implementation is provided
 	///  which calls `get_factor()` recursively on the factors produced.
-	fn factorize(self: &Self, x: T) -> Factorization<T>
+	fn factorize(&self, x: T) -> Factorization<T>
 	{
 		if x == One::one() {
 			return One::one();
@@ -107,7 +107,7 @@ for TrialDivisionFactorizer
 	///  Thus, the number it returns is also always prime.
 	///
 	/// The runtime scales linearly with the size of the smallest factor of `x`.
-	fn get_factor(self: &Self, x: &T) -> T
+	fn get_factor(&self, x: &T) -> T
 	{
 		if x.is_zero() { return Zero::zero() };
 
@@ -181,7 +181,7 @@ for ListFactorizer<T>
 	///
 	/// May panic. (TODO: When?)
 	#[inline]
-	fn get_factor(self: &Self, x: &T) -> T
+	fn get_factor(&self, x: &T) -> T
 	{
 		self.factors[x.to_usize().unwrap()].clone()
 	}
@@ -228,7 +228,7 @@ for StubbornFactorizer<P,F,T>
        T: Eq + Clone + Hash + Zero + One + Integer,
        T: Debug,
 {
-	fn get_factor(self: &Self, x: &T) -> T
+	fn get_factor(&self, x: &T) -> T
 	{
 		if self.prime_tester.is_composite(x) {
 			// We are certain that x is composite, so keep trying to factor until we succeed

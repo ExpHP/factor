@@ -36,7 +36,7 @@ for PollardBrentFactorizer
 {
 	/// Produce a single factor of `x`.  PollardBrentFactorizer is nondeterministic,
 	/// and may sometimes fail to produce a non-trivial factor for composite `x`.
-	fn get_factor(self: &Self, x: &T) -> T
+	fn get_factor(&self, x: &T) -> T
 	{
 		// Adapted from https://comeoncodeon.wordpress.com/2010/09/18/pollard-rho-brent-integer-factorization/
 
