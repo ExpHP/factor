@@ -102,6 +102,21 @@ fn compute_sieve_of_eratosthenes(limit: usize) -> Vec<bool>
 	sieve
 }
 
+/// A prime tester that uses the Miller Rabin test.
+///
+/// Every prime composite number `n` has numbers `a` smaller than it which satisfy
+///  a certain, easily testable property that identifies `n` as composite.  The
+///  values of `a` are said to be "witnesses" to the compositeness of `n`.
+///
+// FIXME: Cite the 3/4
+/// Every `n` has many witnesses; at least 3/4 of the possible choices for `a` are
+/// witnesses, making this extremely reliable as a nondeterministic test for
+/// primality if several witnesses are selected at random.  Similarly, it can be
+/// used deterministically, as small fixed sets of `a` can be used to accurately
+/// identify the primality of all numbers up to extremely large limits.
+///
+/// Currently, `factor` does not provide any method to select the witnesses. It uses
+///  a fixed set of witnesses which work deterministically for all u64.
 pub struct MillerRabinTester;
 
 // TODO: implement non-deterministic miller-rabin
@@ -110,25 +125,24 @@ pub struct MillerRabinTester;
 impl MillerRabinTester
 {
 	/// Produces some set of numbers in the half-open interval `[0,x)` to use
-	///  as potential witnesses for the Miller Rabin Test.
-	// TODO: a term like "witness" prolly isn't fit for public API without definition
-	pub fn collect_witnesses<T>(&self, x: T) -> Vec<T>
+	///  as potential witnesses for the Miller Rabin Test.  Some of the numbers
+	///  produced may exceed the value of x.
+	///
+	/// Conceivably, this could choose an appropriate set of witnesses based on
+	/// the magnitude of x... but currently, it just reports a fixed set of witnesses
+	/// regardless of `x`'s value.
+	// NOTE: This is in part due to the fact that, while switching based on the range of
+	//  x would be nice, it is unclear how one would check the value of `x` against a
+	//  value which may lie outside the range of `x`'s type...
+	pub fn collect_witnesses<T>(&self, _x: T) -> Vec<T>
 	 where T: Eq + Clone + Integer + FromPrimitive,
 	{
-		// There's a couple of options here.
-		// Several witnesses can be chosen at random for a strong heuristic test,
-		//  or one can use a small set of witnesses that has been demonstrated
-		//  to correctly identify all numbers up to some limit.
-
-		// This set of witnesses is known to work for all n < 3,474,749,660,383
-
-		let v = vec![literal(2), literal(3), literal(5), literal(7), literal(11), literal(13)];
-
-		if x > literal(13) {
-			v
-		} else {
-			v.into_iter().filter(|v| v < &x).collect()
-		}
+		// This set of witnesses is known to work for all u64
+		// FIXME: Cite
+		vec![
+			literal(2), literal(3), literal(5), literal(7), literal(11), literal(13),
+			literal(17), literal(19), literal(23), literal(29), literal(31), literal(37),
+		]
 	}
 }
 
@@ -139,15 +153,14 @@ for MillerRabinTester
 {
 	fn is_prime(&self, x: &T) -> bool
 	{
-		if *x < literal(2) { return false; }
 		if *x <= literal(3) { return *x >= literal(2); }
 
 		let neg_one: T = x.clone() - literal(1);
 
 		let (k,d) = decompose_pow2_odd(neg_one.clone());
 
-		'witness: for witness in self.collect_witnesses(x.clone()).into_iter() {
-			// TODO: This must be revised when witness production method can be selected
+		'witness: for witness in self.collect_witnesses(x.clone()) {
+			if witness >= *x { continue }
 
 			let mut cur = mod_pow(witness.clone(), d.clone(), x.clone());
 
