@@ -18,6 +18,8 @@ use num::{Zero, One, Integer};
 use num::{FromPrimitive, ToPrimitive};
 use rand::Rng;
 use rand::weak_rng;
+use num::BigInt;
+use num_bigint::RandBigInt;
 use rand::distributions::range::SampleRange;
 
 use factorize;
@@ -27,8 +29,11 @@ use util::literal;
 use util::gcd;
 use util::mod_pow;
 
-pub struct PollardBrentFactorizer;
+// PollardBrentFactorizerBigInt is a hack because BigInt does not
+//  satisfy SampleRange (it has its own trait which takes by ref >_>)
 
+pub struct PollardBrentFactorizer;
+pub struct PollardBrentFactorizerBigInt;
 
 impl<T> Factorizer<T>
 for PollardBrentFactorizer
@@ -36,82 +41,100 @@ for PollardBrentFactorizer
 {
 	/// Produce a single factor of `x`.  PollardBrentFactorizer is nondeterministic,
 	/// and may sometimes fail to produce a non-trivial factor for composite `x`.
-	fn get_factor(&self, x: &T) -> T
-	{
-		// Adapted from https://comeoncodeon.wordpress.com/2010/09/18/pollard-rho-brent-integer-factorization/
-
-		// In well-written functions, unused mutability is often indicative of a logic error.
-		// So let it be known that this is NOT a well-written function:
-		#![allow(unused_mut)]
-
-		if x.is_even() { return literal(2); }
-		if x.is_multiple_of(&literal(3)) { return literal(3); }
-		if x < &literal(2) { return x.clone(); }
-
+	fn get_factor(&self, x: &T) -> T {
 		let mut rng = weak_rng();
-		let mut y: T = rng.gen_range(One::one(), x.clone()); // current value in the sequence:  y := y^2 + c (mod n)
-		let mut c: T = rng.gen_range(One::one(), x.clone()); // parameter of y sequence
-		let mut m: T = rng.gen_range(One::one(), x.clone()); // step size when multiplying crap together
+		do_pollard(x, |a,b| rng.gen_range(a.clone(), b.clone()))
+	}
+}
 
-		let mut g: T = One::one(); // contains the result
-		let mut r: T = One::one(); // some kind of very coarse index
-		let mut q: T = One::one(); // running product of `(z-y)` values
+impl Factorizer<BigInt>
+for PollardBrentFactorizerBigInt
+{
+	fn get_factor(&self, x: &BigInt) -> BigInt {
+		let mut rng = weak_rng();
+		do_pollard(x, |a,b| rng.gen_bigint_range(a, b))
+	}
+}
 
-		let mut z: T = Zero::zero();      // Initial value of `y` for the current `r` value.
-		let mut y_prev: T = Zero::zero(); // Initial value of `y` for the current `k` value.
+/// Produce a single factor of `x`.  PollardBrentFactorizer is nondeterministic,
+/// and may sometimes fail to produce a non-trivial factor for composite `x`.
+fn do_pollard<'c,T,F>(x: &'c T, mut rand_range: F) -> T
+ where T: Eq + Clone + Zero + One + Integer + Shr<usize, Output=T> + Hash + FromPrimitive + ToPrimitive,
+       F: for<'a,'b> FnMut(&'a T, &'b T) -> T,
+{
+	// Adapted from https://comeoncodeon.wordpress.com/2010/09/18/pollard-rho-brent-integer-factorization/
 
-		// Perform a coarse-grained search through the sequence of `y` values.
-		while g == One::one() {
-			z = y.clone();
+	// In well-written functions, unused mutability is often indicative of a logic error.
+	// So let it be known that this is NOT a well-written function:
+	#![allow(unused_mut)]
 
-			for _ in num::iter::range(Zero::zero(), r.clone()) {
-				y = next_in_sequence(y, x.clone(), c.clone());
-			}
+	if x.is_even() { return literal(2); }
+	if x.is_multiple_of(&literal(3)) { return literal(3); }
+	if x < &literal(2) { return x.clone(); }
 
-			let mut k: T = Zero::zero();
-			while k < r && g == One::one() {
-				y_prev = y.clone();
+	let one = One::one();
+	let mut y: T = rand_range(&one, &x); // current value in the sequence:  y := y^2 + c (mod n)
+	let mut c: T = rand_range(&one, &x); // parameter of y sequence
+	let mut m: T = rand_range(&one, &x); // step size when multiplying crap together
 
-				let niter = min(m.clone(), r.clone() - k.clone());
+	let mut g: T = One::one(); // contains the result
+	let mut r: T = One::one(); // some kind of very coarse index
+	let mut q: T = One::one(); // running product of `(z-y)` values
 
-				// Multiply a bunch of (z-y) terms together (which may share factors with x)
-				for _ in num::iter::range(Zero::zero(), niter) {
-					y = next_in_sequence(y, x.clone(), c.clone());
+	let mut z: T = Zero::zero();      // Initial value of `y` for the current `r` value.
+	let mut y_prev: T = Zero::zero(); // Initial value of `y` for the current `k` value.
 
-					// Deviation from the source linked above, to support unsigned integers:
-					//    abs(z-y) % x  --->  (x+z-y) % x
-					// This is based on the notion that `gcd(+a % b, b) == gcd(-a % b, b)`,
-					// so the absolute value isn't really necessary.
-					q = q * (x.clone() + z.clone() - y.clone());
-					q = q % x.clone();
-				}
+	// Perform a coarse-grained search through the sequence of `y` values.
+	while g == One::one() {
+		z = y.clone();
 
-				g = gcd(x.clone(), q.clone());
-				k = k + m.clone();
-			}
-
-			r = r * literal(2);
-		} // end coarse-grained search
-
-		// N.B. The following occurs when q == 0 (mod x).
-		if &g == x {
-
-			// Return to the beginning of this `k` step
-			y = y_prev;
-
-			loop {
-				// Do a more fine grained search (computing the GCD every step)
-				y = next_in_sequence(y, x.clone(), c.clone());
-				g = gcd(x.clone(), x.clone() + z.clone() - y.clone()); // same deviation as noted above
-
-				if g > One::one() { break; }
-			}
+		for _ in num::iter::range(Zero::zero(), r.clone()) {
+			y = next_in_sequence(y, x.clone(), c.clone());
 		}
 
-		// At this point, g is a nontrivial factor, or g == x.
-		// In the latter case, g may still be composite (a "pseudoprime")
-		return g;
+		let mut k: T = Zero::zero();
+		while k < r && g == One::one() {
+			y_prev = y.clone();
+
+			let niter = min(m.clone(), r.clone() - k.clone());
+
+			// Multiply a bunch of (z-y) terms together (which may share factors with x)
+			for _ in num::iter::range(Zero::zero(), niter) {
+				y = next_in_sequence(y, x.clone(), c.clone());
+
+				// Deviation from the source linked above, to support unsigned integers:
+				//    abs(z-y) % x  --->  (x+z-y) % x
+				// This is based on the notion that `gcd(+a % b, b) == gcd(-a % b, b)`,
+				// so the absolute value isn't really necessary.
+				q = q * (x.clone() + z.clone() - y.clone());
+				q = q % x.clone();
+			}
+
+			g = gcd(x.clone(), q.clone());
+			k = k + m.clone();
+		}
+
+		r = r * literal(2);
+	} // end coarse-grained search
+
+	// N.B. The following occurs when q == 0 (mod x).
+	if &g == x {
+
+		// Return to the beginning of this `k` step
+		y = y_prev;
+
+		loop {
+			// Do a more fine grained search (computing the GCD every step)
+			y = next_in_sequence(y, x.clone(), c.clone());
+			g = gcd(x.clone(), x.clone() + z.clone() - y.clone()); // same deviation as noted above
+
+			if g > One::one() { break; }
+		}
 	}
+
+	// At this point, g is a nontrivial factor, or g == x.
+	// In the latter case, g may still be composite (a "pseudoprime")
+	return g;
 }
 
 // computes (y**2 + c) % x

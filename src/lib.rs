@@ -19,6 +19,7 @@
 #![deny(unused_must_use)]
 
 extern crate num;
+extern crate num_bigint;
 extern crate test;
 extern crate rand;
 extern crate bit_set;
@@ -32,6 +33,7 @@ pub use factorizer::StubbornFactorizer;
 //pub use factorizer::FermatFactorizer;
 //pub use factorizer_dixon::DixonFactorizer; // FIXME broken, has disabled tests
 pub use factorizer_pollard::PollardBrentFactorizer;
+pub use factorizer_pollard::PollardBrentFactorizerBigInt; // FIXME total hack
 //pub use factorizer::GeneralFactorizer;
 pub use factorizer::SafeFactorizer;
 pub use factorizer::DefaultFactorizer;

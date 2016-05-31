@@ -33,6 +33,7 @@ pub use TrialDivisionFactorizer as DefaultFactorizer;
 
 pub use factorizer_dixon::DixonFactorizer;
 pub use factorizer_pollard::PollardBrentFactorizer;
+pub use factorizer_pollard::PollardBrentFactorizerBigInt;
 
 //// XXX: Would reduce some of the pain in keeping impl type bounds consistent, but would also require the
 ////      trait to be explicitly implemented for all applicable types, which arguably sucks just as much.
@@ -310,6 +311,7 @@ mod tests {
 		test_242::<i64,_>(StubbornFactorizer::new(primes.clone(), DixonFactorizer::new(vec![2,3,5])));
 		test_242::<u64,_>(StubbornFactorizer::new(primes.clone(), PollardBrentFactorizer));
 		test_242::<i64,_>(StubbornFactorizer::new(primes.clone(), PollardBrentFactorizer));
+		test_242::<BigInt,_>(StubbornFactorizer::new(primes.clone(), PollardBrentFactorizerBigInt));
 	}
 
 	fn make_list<F,T>(factorizer: F, limit: T) -> ListFactorizer<T>
