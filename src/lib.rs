@@ -24,6 +24,15 @@ extern crate test;
 extern crate rand;
 extern crate bit_set;
 
+mod primes;
+mod factorizer;
+mod factorizer_dixon;
+mod factorizer_pollard;
+mod iter_ext;
+mod util;
+mod factorization;
+pub mod prelude;
+
 pub use primes::PrimeTester;
 pub use primes::PrimeSieve;
 pub use primes::MillerRabinTester;
@@ -31,17 +40,17 @@ pub use factorizer::Factorizer;
 pub use factorizer::TrialDivisionFactorizer;
 pub use factorizer::StubbornFactorizer;
 //pub use factorizer::FermatFactorizer;
-//pub use factorizer_dixon::DixonFactorizer; // FIXME broken, has disabled tests
-pub use factorizer_pollard::PollardBrentFactorizer;
-pub use factorizer_pollard::PollardBrentFactorizerBigInt; // FIXME total hack
 //pub use factorizer::GeneralFactorizer;
 pub use factorizer::SafeFactorizer;
 pub use factorizer::DefaultFactorizer;
 pub use factorizer::ListFactorizer;
-pub use factorization::FactorExt;
-pub use factorization::Factorization;
+//pub use factorizer_dixon::DixonFactorizer; // FIXME broken, has disabled tests
+pub use factorizer_pollard::PollardBrentFactorizer;
+pub use factorizer_pollard::PollardBrentFactorizerBigInt; // FIXME total hack
+pub use iter_ext::FactorExt;
 pub use util::isqrt;
 pub use util::gcd;
+pub use factorization::Factorization;
 
 use util::literal;
 
@@ -52,14 +61,6 @@ use std::ops::Shr;
 
 use num::{Zero,One,Integer};
 use num::{FromPrimitive,ToPrimitive};
-
-mod primes;
-mod factorization;
-mod factorizer;
-mod factorizer_dixon;
-mod factorizer_pollard;
-mod util;
-
 
 /// Factors a number using `DefaultFactorizer`.
 pub fn factorize<T>(x: T) -> Factorization<T>
@@ -78,7 +79,6 @@ pub fn factorize<T>(x: T) -> Factorization<T>
 /// let v: Vec<u64> = primes_upto(17);
 /// assert_eq!(v, vec![2, 3, 5, 7, 11, 13, 17]);
 /// ```
-
 pub fn primes_upto<Out>(limit: usize) -> Out
  where Out: FromIterator<u64>
 {

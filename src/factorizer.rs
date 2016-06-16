@@ -22,6 +22,7 @@ use util::isqrt;
 use util::literal;
 use factorization::Factorization;
 use primes::PrimeTester;
+use iter_ext::FactorExt;
 
 // Type-Synonyms, for semantic purposes.
 // (alas, re-exports don't appear to take docstrings)
