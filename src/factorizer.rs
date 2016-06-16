@@ -32,6 +32,7 @@ pub use TrialDivisionFactorizer as SafeFactorizer;
 // /// The `Factorizer` used by the `factor::factorize` method.
 pub use TrialDivisionFactorizer as DefaultFactorizer;
 
+pub use factorizer_sieve::FactorSieve;
 pub use factorizer_dixon::DixonFactorizer;
 pub use factorizer_pollard::PollardBrentFactorizer;
 pub use factorizer_pollard::PollardBrentFactorizerBigInt;
@@ -146,6 +147,8 @@ for TrialDivisionFactorizer
 // where T: Eq + Clone + Zero + One + Integer + Hash
 //;
 
+// FIXME this shouldn't exist except maybe for testing purposes.
+//       FactorSieve is the way to go.
 /// Factors numbers by using results cached from another `Factorizer`.
 ///
 /// Stores factors produced by another `Factorizer` for quick lookup. Only a single non-trivial
