@@ -42,43 +42,8 @@ impl<T> Factorizer<T> for FactorSieve
 	fn get_factor(&self, x: &T) -> T
 	{ T::from(self.sieve[x.to_usize().unwrap()]).unwrap() }
 
-	// FIXME this is just a specialized implementation for factorizers which
-	// always return the smallest factor. It should be pulled out and reused.
 	fn factorize(&self, x: T) -> Factorization<T>
-	{
-		assert!(x >= T::zero());
-		// special cases to make life easier
-		if (x == T::zero()) { return Factorization::from_iter(vec![(x, 1)]); }
-		if (x == T::one()) { return Factorization::from_iter(vec![]); }
-
-		// the rest of this is basically trying to implement something like the
-		// following in iterator-speak (but there's no grouping iterator in std,
-		// and it is still painful to write an iterator in rust)
-		//    iter.group_by(|p| p)
-		//        .map(|(p, group)| (p, group.count()))
-		// where iter is an imaginary iterator giving one prime at a time (with repeats)
-
-		// begin first group
-		let mut prev = self.get_factor(&x);
-		let mut x = x/prev.clone();
-		let mut count = 1;
-		assert!(prev != T::one());
-
-		let mut out = vec![];
-		while x != T::one() {
-			let p = self.get_factor(&x);
-			if p != prev {
-				// start new group
-				out.push((prev, count));
-				prev = p.clone();
-				count = 0;
-			}
-			count += 1;
-			x = x / p;
-		}
-		out.push((prev, count)); // final group
-		Factorization::from_iter(out)
-	}
+	{ ::factorizer::helper::always_smallest_factorize(self, x) }
 }
 
 //------------------------------------------------------

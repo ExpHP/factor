@@ -62,20 +62,41 @@ pub trait Factorizer<T>
 	///
 	/// * `get_factor(x)` for any non-composite `x` (0, 1, or primes) returns `x`.
 	/// * `get_factor(x)` for any composite `x` produces an arbitrary but non-trivial factor of `x`.
-	/// 
+	///   (this factor is allowed to be composite)
+	///
 	/// Keep in mind that, in addition to the value returned, another factor can be obtained by
 	///  dividing `x` by the value.
 	fn get_factor(&self, x: &T) -> T;
 
 	/// Builds a complete prime factorization of a number.  A default implementation is provided
 	///  which calls `get_factor()` recursively on the factors produced.
-	fn factorize(&self, x: T) -> Factorization<T>
+	fn factorize(&self, x: T) -> Factorization<T> where Self: Sized // FIXME why does this require Sized?
+	{ self::helper::recursive_factorize(self, x) }
+}
+
+pub mod helper {
+	use super::*;
+
+	use std::collections::HashMap;
+	use std::hash::Hash;
+	use num::{Zero, One, Integer};
+
+	use ::Factorization;
+
+	/// The default implementation of `Factorizer::factorize`.
+	///
+	/// Factorizes a number by recursively factorizing both the
+	///  produced factor and the remaining part.
+	///
+	/// Suitable for `Factorizers` which may return a composite number.
+	pub fn recursive_factorize<F,T>(factorizer: &F, x: T) -> Factorization<T>
+	 where F: Factorizer<T>, T: Eq + Clone + Zero + One + Integer + Hash,
 	{
 		if x == One::one() {
 			return One::one();
 		}
 
-		let a = self.get_factor(&x);
+		let a = factorizer.get_factor(&x);
 
 		// Non-composite point to themselves
 		if a == x {
@@ -84,8 +105,54 @@ pub trait Factorizer<T>
 		// Composite numbers
 		} else {
 			let b = x.clone() / a.clone();
-			return self.factorize(a) * self.factorize(b);
+			let a_facs = recursive_factorize(factorizer, a);
+			let b_facs = recursive_factorize(factorizer, b);
+			return a_facs * b_facs;
 		};
+	}
+
+	// NOTE: on a very informal benchmark with ListFactorizer this gave a speedup
+	// factor of 3, which isn't much. TODO bench again once we rip out the hashmaps
+	/// A specialized implementation of `Factorizer::factorize` for certain types.
+	///
+	/// This is an optimized implementation for Factorizers which always produce
+	///  the smallest nontrivial factor of any composite.
+	pub fn always_smallest_factorize<F,T>(factorizer: &F, x: T) -> Factorization<T>
+	 where F: Factorizer<T>, T: Eq + Clone + Zero + One + Integer + Hash,
+	{
+		debug_assert!(x >= T::zero());
+		// special cases to make life easier
+		if (x == T::zero()) { return Factorization::from_iter(vec![(x, 1)]); }
+		if (x == T::one()) { return Factorization::from_iter(vec![]); }
+
+		// the rest of this is basically trying to implement something like the
+		// following in iterator-speak (but there's no grouping iterator in std,
+		// and it is still painful to write an iterator in rust)
+		//    iter.group_by(|p| p)
+		//        .map(|(p, group)| (p, group.count()))
+		// where iter is an imaginary iterator giving one prime at a time (with repeats)
+
+		// begin first group
+		let mut prev = factorizer.get_factor(&x);
+		let mut x = x/prev.clone();
+		let mut count = 1;
+		debug_assert!(prev != T::one());
+
+		let mut out = vec![];
+		while x != T::one() {
+			let p = factorizer.get_factor(&x);
+			if p != prev {
+				debug_assert!(p > prev, "non-sorted primes in always_smallest_factorize");
+				// start new group
+				out.push((prev, count));
+				prev = p.clone();
+				count = 0;
+			}
+			count += 1;
+			x = x / p;
+		}
+		out.push((prev, count)); // final group
+		Factorization::from_iter(out)
 	}
 }
 
@@ -133,8 +200,8 @@ for TrialDivisionFactorizer
 		return x.clone();
 	}
 
-	// TODO: The default recursive algorithm for factorize() is poorly suited
-	//       to this Factorizer, and should be overriden.
+	fn factorize(&self, x: T) -> Factorization<T>
+	{ self::helper::always_smallest_factorize(self, x) }
 }
 
 // TODO
@@ -383,6 +450,15 @@ mod tests {
 		b.iter(||
 			make_list(TrialDivisionFactorizer, 10000u64)
 		);
+	}
+
+	#[bench]
+	fn bench_list_trialdiv_factorize(b: &mut Bencher) {
+		b.iter(|| {
+			let list = make_list(TrialDivisionFactorizer, 10000u64);
+			(0..10000).map(|x| list.factorize(x).into_hash_map().len())
+				.fold(0, |a,b| a+b)
+		});
 	}
 
 	#[bench]
