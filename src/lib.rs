@@ -38,6 +38,7 @@ pub use factorizer_pollard::PollardBrentFactorizerBigInt; // FIXME total hack
 pub use factorizer::SafeFactorizer;
 pub use factorizer::DefaultFactorizer;
 pub use factorizer::ListFactorizer;
+pub use factorization::FactorExt;
 pub use factorization::Factorization;
 pub use util::isqrt;
 pub use util::gcd;
