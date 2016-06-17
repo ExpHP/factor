@@ -31,7 +31,7 @@ mod factorizer_pollard;
 mod factorizer_sieve;
 mod iter_ext;
 mod util;
-mod factorization;
+mod factors;
 pub mod prelude;
 
 pub use primes::PrimeTester;
@@ -52,7 +52,7 @@ pub use factorizer_pollard::PollardBrentFactorizerBigInt; // FIXME total hack
 pub use iter_ext::FactorExt;
 pub use util::isqrt;
 pub use util::gcd;
-pub use factorization::Factorization;
+pub use factors::Factors;
 
 use util::literal;
 
@@ -65,7 +65,7 @@ use num::{Zero,One,Integer};
 use num::{FromPrimitive,ToPrimitive};
 
 /// Factors a number using `DefaultFactorizer`.
-pub fn factorize<T>(x: T) -> Factorization<T>
+pub fn factorize<T>(x: T) -> Factors<T>
  where T: Eq + Clone + Zero + One + Integer + Shr<usize, Output=T> + Hash + ToPrimitive + FromPrimitive
 {
 	DefaultFactorizer.factorize(x)

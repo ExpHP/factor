@@ -19,8 +19,8 @@ use rand::distributions::range::SampleRange;
 use bit_set::BitSet;
 
 use factorize;
-use factorization::Factorization;
-use factorizer::Factorizer;
+use Factors;
+use Factorizer;
 use util::{isqrt,gcd};
 
 pub struct DixonFactorizer<T>
@@ -61,7 +61,7 @@ for DixonFactorizer<T>
 
 		let a_count = self.primes.len() + self.extra_count;
 		let mut a_values: Vec<T> = Vec::new();
-		let mut b_factorizations: Vec<Factorization<T>> = Vec::new();
+		let mut b_factorizations: Vec<Factors<T>> = Vec::new();
 
 		'a: for _ in (0usize..a_count) {
 			for _ in (0usize..self.max_attempts) {
@@ -120,7 +120,7 @@ for DixonFactorizer<T>
 			if matrix_row.is_all_zero() {
 
 				let mut a_prod: T = One::one();
-				let mut b_prod_factors: Factorization<T> = One::one();
+				let mut b_prod_factors: Factors<T> = One::one();
 
 				for index in matrix_row.into_index_set().iter() {
 					a_prod = a_prod * a_values[index].clone();
@@ -149,12 +149,12 @@ for DixonFactorizer<T>
 
 // Utility function that only returns a factorization if it can be constructed
 //  *exclusively* from the given primes.
-fn factorize_limited<T>(x: T, primes: &Vec<T>) -> Option<Factorization<T>>
+fn factorize_limited<T>(x: T, primes: &Vec<T>) -> Option<Factors<T>>
  where T: Eq + Clone + Zero + One + Integer + Hash + SampleRange
 {
 	assert!(!x.is_zero());
 
-	let mut f: Factorization<T> = One::one();
+	let mut f: Factors<T> = One::one();
 	let mut c = x;
 	for p in primes.iter() {
 
@@ -262,7 +262,7 @@ impl DixonBitmatrix
 
 
 // Produce matrix from initial input
-fn bit_matrix_from_factorizations<T>(factorizations: &Vec<Factorization<T>>, primes: &Vec<T>) -> DixonBitmatrix
+fn bit_matrix_from_factorizations<T>(factorizations: &Vec<Factors<T>>, primes: &Vec<T>) -> DixonBitmatrix
  where T: Eq + Clone + Zero + One + Integer + Hash
 {
 	let rows: Vec<DixonBitvec> = factorizations.iter().enumerate().map(|(row_index,fact)| {

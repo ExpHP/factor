@@ -20,7 +20,7 @@ use num::{FromPrimitive, ToPrimitive};
 
 use util::isqrt;
 use util::literal;
-use factorization::Factorization;
+use ::Factors;
 use primes::PrimeTester;
 use iter_ext::FactorExt;
 
@@ -39,7 +39,7 @@ pub use factorizer_pollard::PollardBrentFactorizerBigInt;
 
 //// XXX: Would reduce some of the pain in keeping impl type bounds consistent, but would also require the
 ////      trait to be explicitly implemented for all applicable types, which arguably sucks just as much.
-//// Master trait of traits needed to implement Factorization<T>
+//// Master trait of traits needed to implement Factors<T>
 //trait Factorable: Eq + Clone + Hash + num::Integer { }
 
 
@@ -70,7 +70,7 @@ pub trait Factorizer<T>
 
 	/// Builds a complete prime factorization of a number.  A default implementation is provided
 	///  which calls `get_factor()` recursively on the factors produced.
-	fn factorize(&self, x: T) -> Factorization<T> where Self: Sized // FIXME why does this require Sized?
+	fn factorize(&self, x: T) -> Factors<T> where Self: Sized // FIXME why does this require Sized?
 	{ self::helper::recursive_factorize(self, x) }
 }
 
@@ -81,7 +81,7 @@ pub mod helper {
 	use std::hash::Hash;
 	use num::{Zero, One, Integer};
 
-	use ::Factorization;
+	use ::Factors;
 
 	/// The default implementation of `Factorizer::factorize`.
 	///
@@ -89,7 +89,7 @@ pub mod helper {
 	///  produced factor and the remaining part.
 	///
 	/// Suitable for `Factorizers` which may return a composite number.
-	pub fn recursive_factorize<F,T>(factorizer: &F, x: T) -> Factorization<T>
+	pub fn recursive_factorize<F,T>(factorizer: &F, x: T) -> Factors<T>
 	 where F: Factorizer<T>, T: Eq + Clone + Zero + One + Integer + Hash,
 	{
 		if x == One::one() {
@@ -100,7 +100,7 @@ pub mod helper {
 
 		// Non-composite point to themselves
 		if a == x {
-			return Factorization::from_prime(a);
+			return Factors::from_prime(a);
 
 		// Composite numbers
 		} else {
@@ -117,13 +117,13 @@ pub mod helper {
 	///
 	/// This is an optimized implementation for Factorizers which always produce
 	///  the smallest nontrivial factor of any composite.
-	pub fn always_smallest_factorize<F,T>(factorizer: &F, x: T) -> Factorization<T>
+	pub fn always_smallest_factorize<F,T>(factorizer: &F, x: T) -> Factors<T>
 	 where F: Factorizer<T>, T: Eq + Clone + Zero + One + Integer + Hash,
 	{
 		debug_assert!(x >= T::zero());
 		// special cases to make life easier
-		if (x == T::zero()) { return Factorization::from_iter(vec![(x, 1)]); }
-		if (x == T::one()) { return Factorization::from_iter(vec![]); }
+		if (x == T::zero()) { return Factors::from_iter(vec![(x, 1)]); }
+		if (x == T::one()) { return Factors::from_iter(vec![]); }
 
 		// the rest of this is basically trying to implement something like the
 		// following in iterator-speak (but there's no grouping iterator in std,
@@ -152,7 +152,7 @@ pub mod helper {
 			x = x / p;
 		}
 		out.push((prev, count)); // final group
-		Factorization::from_iter(out)
+		Factors::from_iter(out)
 	}
 }
 
@@ -200,7 +200,7 @@ for TrialDivisionFactorizer
 		return x.clone();
 	}
 
-	fn factorize(&self, x: T) -> Factorization<T>
+	fn factorize(&self, x: T) -> Factors<T>
 	{ self::helper::always_smallest_factorize(self, x) }
 }
 
@@ -453,11 +453,20 @@ mod tests {
 	}
 
 	#[bench]
-	fn bench_list_trialdiv_factorize(b: &mut Bencher) {
+	fn bench_factors_construction(b: &mut Bencher) {
+		let sieve = ::FactorSieve::new(10000u64);
 		b.iter(|| {
-			let list = make_list(TrialDivisionFactorizer, 10000u64);
-			(0..10000).map(|x| list.factorize(x).into_hash_map().len())
+			(0..10000).map(|x| sieve.factorize(x).iter().count())
 				.fold(0, |a,b| a+b)
+		});
+	}
+
+	#[bench]
+	fn bench_factors_product(b: &mut Bencher) {
+		let sieve = ::FactorSieve::new(10000u64);
+		b.iter(|| {
+			(3000..4000).map(|x| sieve.factorize(x))
+				.fold(::Factors::<u64>::one(), |a,b| a*b)
 		});
 	}
 

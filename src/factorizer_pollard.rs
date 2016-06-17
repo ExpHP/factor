@@ -23,8 +23,8 @@ use num_bigint::RandBigInt;
 use rand::distributions::range::SampleRange;
 
 use factorize;
-use factorization::Factorization;
-use factorizer::Factorizer;
+use Factors;
+use Factorizer;
 use util::literal;
 use util::gcd;
 use util::mod_pow;
