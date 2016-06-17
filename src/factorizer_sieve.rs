@@ -7,7 +7,6 @@
 // to those terms.
 
 use num::{Zero, One, Integer, NumCast};
-use ::std::hash::Hash;
 use ::Factorizer;
 use ::Factors;
 
@@ -37,7 +36,7 @@ impl FactorSieve {
 }
 
 impl<T> Factorizer<T> for FactorSieve
- where T: Eq + Clone + Zero + One + Integer + Hash + NumCast,
+ where T: Clone + Zero + One + Integer + NumCast,
 {
 	fn get_factor(&self, x: &T) -> T
 	{ T::from(self.sieve[x.to_usize().unwrap()]).unwrap() }

@@ -6,8 +6,6 @@
 // This file may not be copied, modified, or distributed except according
 // to those terms.
 
-use std::collections::hash_map::HashMap;
-use std::hash::Hash;
 use std::ops::Shr;
 use std::fmt::Debug;
 

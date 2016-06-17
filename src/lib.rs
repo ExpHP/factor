@@ -57,8 +57,6 @@ pub use factors::Factors;
 use util::literal;
 
 use std::iter::FromIterator;
-use std::collections::HashMap;
-use std::hash::Hash;
 use std::ops::Shr;
 
 use num::{Zero,One,Integer};
@@ -66,7 +64,7 @@ use num::{FromPrimitive,ToPrimitive};
 
 /// Factors a number using `DefaultFactorizer`.
 pub fn factorize<T>(x: T) -> Factors<T>
- where T: Eq + Clone + Zero + One + Integer + Shr<usize, Output=T> + Hash + ToPrimitive + FromPrimitive
+ where T: Clone + Zero + One + Integer + Shr<usize, Output=T> + ToPrimitive + FromPrimitive
 {
 	DefaultFactorizer.factorize(x)
 }

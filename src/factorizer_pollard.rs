@@ -6,8 +6,6 @@
 // This file may not be copied, modified, or distributed except according
 // to those terms.
 
-use std::collections::HashMap;
-use std::hash::Hash;
 use std::ops::{Shr,Rem};
 use std::mem::swap;
 
@@ -37,7 +35,7 @@ pub struct PollardBrentFactorizerBigInt;
 
 impl<T> Factorizer<T>
 for PollardBrentFactorizer
- where T: Eq + Clone + Zero + One + Integer + Shr<usize, Output=T> + Hash + SampleRange + FromPrimitive + ToPrimitive,
+ where T: Clone + Zero + One + Integer + Shr<usize, Output=T> + SampleRange + FromPrimitive + ToPrimitive,
 {
 	/// Produce a single factor of `x`.  PollardBrentFactorizer is nondeterministic,
 	/// and may sometimes fail to produce a non-trivial factor for composite `x`.
@@ -59,7 +57,7 @@ for PollardBrentFactorizerBigInt
 /// Produce a single factor of `x`.  PollardBrentFactorizer is nondeterministic,
 /// and may sometimes fail to produce a non-trivial factor for composite `x`.
 fn do_pollard<'c,T,F>(x: &'c T, mut rand_range: F) -> T
- where T: Eq + Clone + Zero + One + Integer + Shr<usize, Output=T> + Hash + FromPrimitive + ToPrimitive,
+ where T: Clone + Zero + One + Integer + Shr<usize, Output=T> + FromPrimitive + ToPrimitive,
        F: for<'a,'b> FnMut(&'a T, &'b T) -> T,
 {
 	// Adapted from https://comeoncodeon.wordpress.com/2010/09/18/pollard-rho-brent-integer-factorization/

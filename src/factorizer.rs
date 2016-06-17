@@ -8,8 +8,6 @@
 
 // FIXME This file has a disabled test!
 
-use std::collections::HashMap;
-use std::hash::Hash;
 use std::ops::{Shr,Rem};
 use std::fmt::Debug;
 use std::marker::PhantomData;
@@ -40,7 +38,7 @@ pub use factorizer_pollard::PollardBrentFactorizerBigInt;
 //// XXX: Would reduce some of the pain in keeping impl type bounds consistent, but would also require the
 ////      trait to be explicitly implemented for all applicable types, which arguably sucks just as much.
 //// Master trait of traits needed to implement Factors<T>
-//trait Factorable: Eq + Clone + Hash + num::Integer { }
+//trait Factorable: Clone + num::Integer { }
 
 
 // TODO: There should be a statically typed distinction for nondeterministic factorizers
@@ -50,7 +48,7 @@ pub use factorizer_pollard::PollardBrentFactorizerBigInt;
 
 /// An interface for factorizing positive integers.
 pub trait Factorizer<T>
- where T: Eq + Clone + Zero + One + Integer + Hash
+ where T: Clone + Zero + One + Integer
 {
 	// TODO: Perhaps more sensible to return `1` for non-composite (so that division by the result
 	//       is safe without needing to check for zero)
@@ -77,8 +75,6 @@ pub trait Factorizer<T>
 pub mod helper {
 	use super::*;
 
-	use std::collections::HashMap;
-	use std::hash::Hash;
 	use num::{Zero, One, Integer};
 
 	use ::Factors;
@@ -90,7 +86,7 @@ pub mod helper {
 	///
 	/// Suitable for `Factorizers` which may return a composite number.
 	pub fn recursive_factorize<F,T>(factorizer: &F, x: T) -> Factors<T>
-	 where F: Factorizer<T>, T: Eq + Clone + Zero + One + Integer + Hash,
+	 where F: Factorizer<T>, T: Clone + Zero + One + Integer,
 	{
 		if x == One::one() {
 			return One::one();
@@ -118,7 +114,7 @@ pub mod helper {
 	/// This is an optimized implementation for Factorizers which always produce
 	///  the smallest nontrivial factor of any composite.
 	pub fn always_smallest_factorize<F,T>(factorizer: &F, x: T) -> Factors<T>
-	 where F: Factorizer<T>, T: Eq + Clone + Zero + One + Integer + Hash,
+	 where F: Factorizer<T>, T: Clone + Zero + One + Integer,
 	{
 		debug_assert!(x >= T::zero());
 		// special cases to make life easier
@@ -170,7 +166,7 @@ pub struct TrialDivisionFactorizer;
 
 impl<T> Factorizer<T>
 for TrialDivisionFactorizer
- where T: Eq + Clone + Zero + One + Integer + Shr<usize, Output=T> + Hash + FromPrimitive + ToPrimitive,
+ where T: Clone + Zero + One + Integer + Shr<usize, Output=T> + FromPrimitive + ToPrimitive,
 {
 	/// Produce a single factor of `x`.  TrialDivisionFactorizer is deterministic,
 	///  and will always produce the smallest non-trivial factor of any composite number.
@@ -206,12 +202,12 @@ for TrialDivisionFactorizer
 
 // TODO
 //pub struct FermatFactorizer<T>
-// where T: Eq + Clone + Zero + One + Integer + Hash
+// where T: Clone + Zero + One + Integer
 //;
 
 // TODO
 //pub struct GeneralFactorizer<T>
-// where T: Eq + Clone + Zero + One + Integer + Hash
+// where T: Clone + Zero + One + Integer
 //;
 
 // FIXME this shouldn't exist except maybe for testing purposes.
@@ -230,7 +226,7 @@ pub struct ListFactorizer<T>
 // TODO: Not sure how to do static dispatch here under the new orphan-checking rules.
 //       Perhaps fix this up if/when unboxed abstract types make an appearance
 impl<T> ListFactorizer<T>
- where T: Eq + Clone + Hash + Integer + FromPrimitive + ToPrimitive,
+ where T: Clone + Integer + FromPrimitive + ToPrimitive,
 {
 	/// Constructs a `ListFactorizer` containing factors for the numbers `0..n`, using the
 	///  provided `factorizer` to generate them.  Be sure to wrap any nondeterministic
@@ -245,7 +241,7 @@ impl<T> ListFactorizer<T>
 
 impl<T> Factorizer<T>
 for ListFactorizer<T>
- where T: Eq + Clone + Hash + Integer + ToPrimitive,
+ where T: Clone + Integer + ToPrimitive,
 {
 	/// Produces the factor stored for `x`.
 	///
@@ -270,7 +266,7 @@ for ListFactorizer<T>
 pub struct StubbornFactorizer<P,F,T>
  where P: PrimeTester<T>,
        F: Factorizer<T>,
-       T: Eq + Clone + Hash + Zero + One + Integer,
+       T: Clone + Zero + One + Integer,
 {
 	prime_tester: P,
 	factorizer:   F,
@@ -280,7 +276,7 @@ pub struct StubbornFactorizer<P,F,T>
 impl<P,F,T> StubbornFactorizer<P,F,T>
  where P: PrimeTester<T>,
        F: Factorizer<T>,
-       T: Eq + Clone + Hash + Zero + One + Integer,
+       T: Clone + Zero + One + Integer,
 {
 	#[inline]
 	pub fn new(prime_tester: P, factorizer: F) -> Self
@@ -297,7 +293,7 @@ impl<P,F,T> Factorizer<T>
 for StubbornFactorizer<P,F,T>
  where P: PrimeTester<T>,
        F: Factorizer<T>,
-       T: Eq + Clone + Hash + Zero + One + Integer,
+       T: Clone + Zero + One + Integer,
        T: Debug,
 {
 	fn get_factor(&self, x: &T) -> T
@@ -323,8 +319,6 @@ for StubbornFactorizer<P,F,T>
 mod tests {
 	use super::*;
 
-	use std::collections::hash_map::HashMap;
-	use std::hash::Hash;
 	use std::fmt::Debug;
 
 	use num;
@@ -339,7 +333,7 @@ mod tests {
 
 	//  A simple test to factorize 242 as an arbitrary data type using an arbitrary factorizer.
 	fn test_242<T, U>(factorizer: U)
-	 where T: Eq + Clone + Debug + Hash + Integer + FromPrimitive,
+	 where T: Clone + Debug + Integer + FromPrimitive,
 	       U: Factorizer<T>,
 	{
 		// 242 = 2 * 11 * 11
@@ -387,14 +381,14 @@ mod tests {
 
 	fn make_list<F,T>(factorizer: F, limit: T) -> ListFactorizer<T>
 	 where F: Factorizer<T>,
-	       T: Eq + Clone + Debug + Hash + Integer + FromPrimitive + ToPrimitive,
+	       T: Clone + Debug + Integer + FromPrimitive + ToPrimitive,
 	{
 		return ListFactorizer::compute_new(limit, &factorizer);
 	}
 
 	fn make_list_stubborn<F,T>(factorizer: F, limit: T) -> ListFactorizer<T>
 	 where F: Factorizer<T>,
-	       T: Eq + Clone + Debug + Hash + Integer + FromPrimitive + ToPrimitive,
+	       T: Clone + Debug + Integer + FromPrimitive + ToPrimitive,
 	{
 		let primes = PrimeSieve::new(limit.to_usize().unwrap());
 		let stubborn = StubbornFactorizer::new(primes, factorizer);

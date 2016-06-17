@@ -7,10 +7,9 @@
 // to those terms.
 
 use std::default::Default;
-use std::ops::{Add,Sub,Mul,Div,Rem};
+use std::ops::Mul;
 use std::cmp::{min,max};
 use std::collections::BTreeMap;
-use std::hash::Hash;
 
 use num;
 use num::{One,FromPrimitive};
