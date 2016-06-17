@@ -68,6 +68,10 @@ pub trait Factorizer<T>
 
 	/// Builds a complete prime factorization of a number.  A default implementation is provided
 	///  which calls `get_factor()` recursively on the factors produced.
+	///
+	/// Construction of a `Factorization` representing zero is not allowed, therefore
+	/// `factorize(0)` is illegal.  Implementations are expected to check for this
+	/// special case and emit an error.
 	fn factorize(&self, x: T) -> Factors<T> where Self: Sized // FIXME why does this require Sized?
 	{ self::helper::recursive_factorize(self, x) }
 }
@@ -88,9 +92,9 @@ pub mod helper {
 	pub fn recursive_factorize<F,T>(factorizer: &F, x: T) -> Factors<T>
 	 where F: Factorizer<T>, T: Clone + Zero + One + Integer,
 	{
-		if x == One::one() {
-			return One::one();
-		}
+		debug_assert!(x >= T::zero());
+		if x == T::zero() { panic!("Zero has no factorization") }
+		if x == T::one() { return One::one(); }
 
 		let a = factorizer.get_factor(&x);
 
@@ -117,9 +121,8 @@ pub mod helper {
 	 where F: Factorizer<T>, T: Clone + Zero + One + Integer,
 	{
 		debug_assert!(x >= T::zero());
-		// special cases to make life easier
-		if (x == T::zero()) { return Factors::from_iter(vec![(x, 1)]); }
-		if (x == T::one()) { return Factors::from_iter(vec![]); }
+		if x == T::zero() { panic!("Zero has no factorization") }
+		if x == T::one() { return One::one(); }
 
 		// the rest of this is basically trying to implement something like the
 		// following in iterator-speak (but there's no grouping iterator in std,
@@ -404,9 +407,12 @@ mod tests {
 				let expected = make_list(TrialDivisionFactorizer, $limit);
 				let actual   = make_list_stubborn($factorizer, $limit);
 
+				// We can't call factorize(0), but the value of get_factor(0) is still specified
+				assert_eq!(expected.get_factor(&literal(0)), literal(0));
+
 				// The elements of the two lists may differ, but the complete factorization
 				//  of each number must agree:
-				for i in num::iter::range(literal(0), $limit) {
+				for i in num::iter::range(literal(1), $limit) {
 					assert_eq!(expected.factorize(i.clone()), actual.factorize(i));
 				};
 			}
@@ -450,7 +456,7 @@ mod tests {
 	fn bench_factors_construction(b: &mut Bencher) {
 		let sieve = ::FactorSieve::new(10000u64);
 		b.iter(|| {
-			(0..10000).map(|x| sieve.factorize(x).iter().count())
+			(1..10000).map(|x| sieve.factorize(x).iter().count())
 				.fold(0, |a,b| a+b)
 		});
 	}
