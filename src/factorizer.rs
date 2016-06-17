@@ -111,8 +111,8 @@ pub mod helper {
 		};
 	}
 
-	// NOTE: on a very informal benchmark with ListFactorizer this gave a speedup
-	// factor of 3, which isn't much. TODO bench again once we rip out the hashmaps
+	// NOTE: informal benchmarks indicate that the detectable speedup here is fairly
+	// modest (a factor of ~2-3).
 	/// A specialized implementation of `Factorizer::factorize` for certain types.
 	///
 	/// This is an optimized implementation for Factorizers which always produce

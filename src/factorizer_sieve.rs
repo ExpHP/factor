@@ -42,7 +42,7 @@ impl<T> Factorizer<T> for FactorSieve
 	{ T::from(self.sieve[x.to_usize().unwrap()]).unwrap() }
 
 	fn factorize(&self, x: T) -> Factors<T>
-	{ ::factorizer::helper::recursive_factorize(self, x) }
+	{ ::factorizer::helper::always_smallest_factorize(self, x) }
 }
 
 //------------------------------------------------------
