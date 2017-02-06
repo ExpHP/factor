@@ -14,11 +14,11 @@ use std::marker::PhantomData;
 
 use num;
 use num::{Zero, One, Integer};
-use num::{FromPrimitive, ToPrimitive};
 
 use util::isqrt;
 use util::literal;
-use ::Factors;
+use util::MoreNumCast;
+use ::Factored;
 use primes::PrimeTester;
 use iter_ext::FactorExt;
 
@@ -37,7 +37,7 @@ pub use factorizer_pollard::PollardBrentFactorizerBigInt;
 
 //// XXX: Would reduce some of the pain in keeping impl type bounds consistent, but would also require the
 ////      trait to be explicitly implemented for all applicable types, which arguably sucks just as much.
-//// Master trait of traits needed to implement Factors<T>
+//// Master trait of traits needed to implement Factored<T>
 //trait Factorable: Clone + num::Integer { }
 
 
@@ -72,7 +72,7 @@ pub trait Factorizer<T>
 	/// Construction of a `Factorization` representing zero is not allowed, therefore
 	/// `factorize(0)` is illegal.  Implementations are expected to check for this
 	/// special case and emit an error.
-	fn factorize(&self, x: T) -> Factors<T> where Self: Sized // FIXME why does this require Sized?
+	fn factorize(&self, x: T) -> Factored<T> where Self: Sized // FIXME why does this require Sized?
 	{ self::helper::recursive_factorize(self, x) }
 }
 
@@ -81,7 +81,7 @@ pub mod helper {
 
 	use num::{Zero, One, Integer};
 
-	use ::Factors;
+	use ::Factored;
 
 	/// The default implementation of `Factorizer::factorize`.
 	///
@@ -89,7 +89,7 @@ pub mod helper {
 	///  produced factor and the remaining part.
 	///
 	/// Suitable for `Factorizers` which may return a composite number.
-	pub fn recursive_factorize<F,T>(factorizer: &F, x: T) -> Factors<T>
+	pub fn recursive_factorize<F,T>(factorizer: &F, x: T) -> Factored<T>
 	 where F: Factorizer<T>, T: Clone + Zero + One + Integer,
 	{
 		debug_assert!(x >= T::zero());
@@ -100,7 +100,7 @@ pub mod helper {
 
 		// Non-composite point to themselves
 		if a == x {
-			return Factors::from_prime(a);
+			return Factored::from_prime(a);
 
 		// Composite numbers
 		} else {
@@ -117,7 +117,7 @@ pub mod helper {
 	///
 	/// This is an optimized implementation for Factorizers which always produce
 	///  the smallest nontrivial factor of any composite.
-	pub fn always_smallest_factorize<F,T>(factorizer: &F, x: T) -> Factors<T>
+	pub fn always_smallest_factorize<F,T>(factorizer: &F, x: T) -> Factored<T>
 	 where F: Factorizer<T>, T: Clone + Zero + One + Integer,
 	{
 		debug_assert!(x >= T::zero());
@@ -151,7 +151,7 @@ pub mod helper {
 			x = x / p;
 		}
 		out.push((prev, count)); // final group
-		Factors::from_iter(out)
+		Factored::from_iter(out)
 	}
 }
 
@@ -169,7 +169,7 @@ pub struct TrialDivisionFactorizer;
 
 impl<T> Factorizer<T>
 for TrialDivisionFactorizer
- where T: Clone + Zero + One + Integer + Shr<usize, Output=T> + FromPrimitive + ToPrimitive,
+ where T: Clone + Zero + One + Integer + Shr<usize, Output=T> + MoreNumCast,
 {
 	/// Produce a single factor of `x`.  TrialDivisionFactorizer is deterministic,
 	///  and will always produce the smallest non-trivial factor of any composite number.
@@ -185,7 +185,7 @@ for TrialDivisionFactorizer
 		let start: T = literal(3);
 		let stop:  T = isqrt(x.clone()) + literal(2);
 		let step:  T = literal(2);
-		
+
 		//for odd in range_step(start, stop, step)  // needs trait Int
 		let mut odd = start;
 		while odd < stop {
@@ -199,7 +199,7 @@ for TrialDivisionFactorizer
 		return x.clone();
 	}
 
-	fn factorize(&self, x: T) -> Factors<T>
+	fn factorize(&self, x: T) -> Factored<T>
 	{ self::helper::always_smallest_factorize(self, x) }
 }
 
@@ -229,7 +229,7 @@ pub struct ListFactorizer<T>
 // TODO: Not sure how to do static dispatch here under the new orphan-checking rules.
 //       Perhaps fix this up if/when unboxed abstract types make an appearance
 impl<T> ListFactorizer<T>
- where T: Clone + Integer + FromPrimitive + ToPrimitive,
+ where T: Clone + Integer + MoreNumCast,
 {
 	/// Constructs a `ListFactorizer` containing factors for the numbers `0..n`, using the
 	///  provided `factorizer` to generate them.  Be sure to wrap any nondeterministic
@@ -237,14 +237,14 @@ impl<T> ListFactorizer<T>
 	///  get cached in the list.
 	pub fn compute_new(n: T, factorizer: &Factorizer<T>) -> Self {
 		ListFactorizer {
-			factors: num::iter::range(literal(0), n).map(|x| factorizer.get_factor(&x)).collect(),
+			factors: num::iter::range(Zero::zero(), n).map(|x| factorizer.get_factor(&x)).collect(),
 		}
 	}
 }
 
 impl<T> Factorizer<T>
 for ListFactorizer<T>
- where T: Clone + Integer + ToPrimitive,
+ where T: Clone + Integer + MoreNumCast,
 {
 	/// Produces the factor stored for `x`.
 	///
@@ -327,7 +327,7 @@ mod tests {
 	use num;
 	use num::{BigUint, BigInt};
 	use num::{Zero, One, Integer};
-	use num::{FromPrimitive, ToPrimitive};
+	use num::NumCast;
 	use test::Bencher;
 
 	use util::literal;
@@ -336,7 +336,7 @@ mod tests {
 
 	//  A simple test to factorize 242 as an arbitrary data type using an arbitrary factorizer.
 	fn test_242<T, U>(factorizer: U)
-	 where T: Clone + Debug + Integer + FromPrimitive,
+	 where T: Clone + Debug + Integer + NumCast,
 	       U: Factorizer<T>,
 	{
 		// 242 = 2 * 11 * 11
@@ -349,10 +349,10 @@ mod tests {
 		expected[2]  = 1;
 		expected[11] = 2;
 
-		// Check factorization against expected		
+		// Check factorization against expected
 		for (k,v) in expected.iter().enumerate() {
-			let k_t = FromPrimitive::from_usize(k).unwrap();  // cast k to T
-			let v_t = FromPrimitive::from_usize(*v).unwrap(); // cast v to whatever the heck it is today
+			let k_t = T::from(k).unwrap();  // cast k to T
+			let v_t = T::from(*v).unwrap(); // cast v to whatever the heck it is today
 			assert_eq!(factors.get(&k_t), v_t);
 		}
 	}
@@ -368,7 +368,7 @@ mod tests {
 
 		// a signed type
 		test_242::<isize,_>(TrialDivisionFactorizer);
-	
+
 		// my pain and suffering
 		test_242::<BigUint,_>(TrialDivisionFactorizer);
 		test_242::<BigInt,_>(TrialDivisionFactorizer);
@@ -384,14 +384,14 @@ mod tests {
 
 	fn make_list<F,T>(factorizer: F, limit: T) -> ListFactorizer<T>
 	 where F: Factorizer<T>,
-	       T: Clone + Debug + Integer + FromPrimitive + ToPrimitive,
+	       T: Clone + Debug + Integer + NumCast,
 	{
 		return ListFactorizer::compute_new(limit, &factorizer);
 	}
 
 	fn make_list_stubborn<F,T>(factorizer: F, limit: T) -> ListFactorizer<T>
 	 where F: Factorizer<T>,
-	       T: Clone + Debug + Integer + FromPrimitive + ToPrimitive,
+	       T: Clone + Debug + Integer + NumCast,
 	{
 		let primes = PrimeSieve::new(limit.to_usize().unwrap());
 		let stubborn = StubbornFactorizer::new(primes, factorizer);
@@ -466,7 +466,7 @@ mod tests {
 		let sieve = ::FactorSieve::new(10000u64);
 		b.iter(|| {
 			(3000..4000).map(|x| sieve.factorize(x))
-				.fold(::Factors::<u64>::one(), |a,b| a*b)
+				.fold(::Factored::<u64>::one(), |a,b| a*b)
 		});
 	}
 

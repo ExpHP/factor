@@ -17,15 +17,17 @@ use num::{FromPrimitive, ToPrimitive};
 use rand::Rng;
 use rand::weak_rng;
 use num::BigInt;
+use num::NumCast;
 use num_bigint::RandBigInt;
 use rand::distributions::range::SampleRange;
 
 use factorize;
-use Factors;
+use Factored;
 use Factorizer;
 use util::literal;
 use util::gcd;
 use util::mod_pow;
+use util::MoreNumCast;
 
 // PollardBrentFactorizerBigInt is a hack because BigInt does not
 //  satisfy SampleRange (it has its own trait which takes by ref >_>)
@@ -35,7 +37,7 @@ pub struct PollardBrentFactorizerBigInt;
 
 impl<T> Factorizer<T>
 for PollardBrentFactorizer
- where T: Clone + Zero + One + Integer + Shr<usize, Output=T> + SampleRange + FromPrimitive + ToPrimitive,
+ where T: Clone + Zero + One + Integer + Shr<usize, Output=T> + SampleRange + MoreNumCast,
 {
 	/// Produce a single factor of `x`.  PollardBrentFactorizer is nondeterministic,
 	/// and may sometimes fail to produce a non-trivial factor for composite `x`.
@@ -57,7 +59,7 @@ for PollardBrentFactorizerBigInt
 /// Produce a single factor of `x`.  PollardBrentFactorizer is nondeterministic,
 /// and may sometimes fail to produce a non-trivial factor for composite `x`.
 fn do_pollard<'c,T,F>(x: &'c T, mut rand_range: F) -> T
- where T: Clone + Zero + One + Integer + Shr<usize, Output=T> + FromPrimitive + ToPrimitive,
+ where T: Clone + Zero + One + Integer + Shr<usize, Output=T> + MoreNumCast,
        F: for<'a,'b> FnMut(&'a T, &'b T) -> T,
 {
 	// Adapted from https://comeoncodeon.wordpress.com/2010/09/18/pollard-rho-brent-integer-factorization/

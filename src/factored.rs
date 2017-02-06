@@ -1,4 +1,4 @@
-// Copyright (2015-2016) Michael 'ExpHP' Lamparski
+// Copyright (2015-2017) Michael 'ExpHP' Lamparski
 //
 // Licensed under the terms of the MIT License, available at:
 //  http://opensource.org/licenses/MIT
@@ -20,7 +20,7 @@ use ::FactorExt;
 
 /// An integer stored as its prime factorization.
 ///
-/// A `Factors` represents a non-negative integer stored in the form
+/// A `Factored` represents a non-negative integer stored in the form
 ///
 /// ```text
 /// pow(p1, n1) * pow(p2, n2) * ... * pow(pN, nN)
@@ -42,7 +42,7 @@ use ::FactorExt;
 ///  of nonsensical results; not in the sense that the safety guidelines of Rust
 ///  may be violated)
 #[derive(Eq,PartialEq,Debug,Clone)]
-pub struct Factors<X>
+pub struct Factored<X>
 {
 	// powers are currently usize for consistency with the pow() function
 	//  in the num crate.
@@ -51,7 +51,7 @@ pub struct Factors<X>
 
 // TODO: some of Factorization's methods need to be special cased for Zero
 
-impl<X> Factors<X>
+impl<X> Factored<X>
  where X: Ord,
 {
 	/// Set the power of a prime factor in the `Factorization`. `prime` is
@@ -80,16 +80,16 @@ impl<X> Factors<X>
 	}
 
 
-	/// Create a `Factors` from a single prime.
+	/// Create a `Factored` from a single prime.
 	///
 	/// Do not use on a composite number (use `factor::factorize`)
 	/// or one (use `One::one()`).
 	pub fn from_prime(prime: X) -> Self
 	{
-		Factors { powers: ::std::iter::once((prime, 1)).collect() }
+		Factored { powers: ::std::iter::once((prime, 1)).collect() }
 	}
 
-	/// Recover the integer represented by the `Factors`.
+	/// Recover the integer represented by the `Factored`.
 	///
 	/// # Example:
 	///
@@ -119,7 +119,7 @@ impl<X> Factors<X>
 	{ self.iter().map(clone2).divisor_count() }
 
 	/// Compute the sum of all positive integers which evenly divide the number
-	///  represented by the `Factors` (including 1 and the number itself).
+	///  represented by the `Factored` (including 1 and the number itself).
 	///
 	/// # Example:
 	///
@@ -149,7 +149,7 @@ impl<X> Factors<X>
 	{ self.iter().map(clone2).totient() }
 }
 
-impl<X> Factors<X>
+impl<X> Factored<X>
  where X: Ord,
 {
 	/// Get the square root of a perfect square.
@@ -252,7 +252,7 @@ impl<X> Factors<X>
 	/// Mutably borrow the underlying map.
 	///
 	/// This is provided on the grounds of "eh, why the hell not."  After all,
-	/// it's not exactly like `Factors` was doing a very good job at protecting
+	/// it's not exactly like `Factored` was doing a very good job at protecting
 	/// any of its invariants to begin with.
 	pub fn as_mut_btree_map(&mut self) -> &mut BTreeMap<X, usize> { &mut self.powers }
 	/// Consume to obtain the underlying map.
@@ -260,12 +260,12 @@ impl<X> Factors<X>
 
 	/// Construct from a map of unique `(prime, power)` pairs.
 	pub fn from_btree_map(map: BTreeMap<X, usize>) -> Self {
-		Factors { powers: map }
+		Factored { powers: map }
 	}
 
 	/// Construct from an iterator of unique `(prime, power)` pairs.
 	pub fn from_iter<I:IntoIterator<Item=(X,usize)>>(iter: I) -> Self {
-		Factors::from_btree_map(iter.into_iter().collect())
+		Factored::from_btree_map(iter.into_iter().collect())
 	}
 
 	// TODO: Reasonable (?) methods to implement
@@ -273,23 +273,23 @@ impl<X> Factors<X>
 }
 
 impl<X> One
-for Factors<X>
+for Factored<X>
  where X: Ord + Clone,
 {
-	/// Create a `Factors` representing `1`.
+	/// Create a `Factored` representing `1`.
 	fn one() -> Self { Self::from_btree_map(BTreeMap::new()) }
 }
 
 impl<X> Default
-for Factors<X>
+for Factored<X>
  where X: Ord + Clone,
 {
-	/// Create a `Factors` representing `1`.
+	/// Create a `Factored` representing `1`.
 	fn default() -> Self { One::one() }
 }
 
-impl<X> Mul<Factors<X>>
-for Factors<X>
+impl<X> Mul<Factored<X>>
+for Factored<X>
  where X: Ord + Clone,
 {
 	type Output = Self;

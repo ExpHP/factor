@@ -1,4 +1,4 @@
-// Copyright 2015 Michael 'ExpHP' Lamparski
+// Copyright 2015-2017 Michael 'ExpHP' Lamparski
 //
 // Licensed under the terms of the MIT License, available at:
 //  http://opensource.org/licenses/MIT
@@ -31,7 +31,7 @@ mod factorizer_pollard;
 mod factorizer_sieve;
 mod iter_ext;
 mod util;
-mod factors;
+mod factored;
 pub mod prelude;
 
 pub use primes::PrimeTester;
@@ -52,19 +52,20 @@ pub use factorizer_pollard::PollardBrentFactorizerBigInt; // FIXME total hack
 pub use iter_ext::FactorExt;
 pub use util::isqrt;
 pub use util::gcd;
-pub use factors::Factors;
+pub use factored::Factored;
 
 use util::literal;
+use util::MoreNumCast;
 
 use std::iter::FromIterator;
 use std::ops::Shr;
 
 use num::{Zero,One,Integer};
-use num::{FromPrimitive,ToPrimitive};
+use num::{FromPrimitive,ToPrimitive,NumCast};
 
 /// Factors a number using `DefaultFactorizer`.
-pub fn factorize<T>(x: T) -> Factors<T>
- where T: Clone + Zero + One + Integer + Shr<usize, Output=T> + ToPrimitive + FromPrimitive
+pub fn factorize<T>(x: T) -> Factored<T>
+ where T: Clone + Zero + One + Integer + Shr<usize, Output=T> + MoreNumCast
 {
 	DefaultFactorizer.factorize(x)
 }

@@ -8,7 +8,7 @@
 
 use num::{Zero, One, Integer, NumCast};
 use ::Factorizer;
-use ::Factors;
+use ::Factored;
 
 /// An object for efficiently factorizing many small numbers.
 ///
@@ -41,7 +41,7 @@ impl<T> Factorizer<T> for FactorSieve
 	fn get_factor(&self, x: &T) -> T
 	{ T::from(self.sieve[x.to_usize().unwrap()]).unwrap() }
 
-	fn factorize(&self, x: T) -> Factors<T>
+	fn factorize(&self, x: T) -> Factored<T>
 	{ ::factorizer::helper::always_smallest_factorize(self, x) }
 }
 
@@ -108,4 +108,3 @@ fn test() {
 		assert_eq!(&actual[..], &correct[..len]);
 	}
 }
-

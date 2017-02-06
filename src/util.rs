@@ -11,7 +11,11 @@ use std::fmt::Debug;
 
 use num::bigint::{ToBigUint,BigUint};
 use num::{Zero,One,Integer};
-use num::{FromPrimitive,ToPrimitive};
+use num::{ToPrimitive,FromPrimitive};
+
+/// Services more types than NumCast does, such as BigInt.
+pub trait MoreNumCast: ToPrimitive + FromPrimitive { }
+impl<T: ToPrimitive + FromPrimitive> MoreNumCast for T { }
 
 use test::Bencher;
 
@@ -45,7 +49,7 @@ fn bench_gcd(b: &mut Bencher) {
 /// Performs an integer square root, returning the largest integer whose square is not
 ///  greater than the argument.
 pub fn isqrt<T>(n: T) -> T
- where T: Clone + Zero + Integer + Shr<usize, Output=T> + FromPrimitive + ToPrimitive,
+ where T: Clone + Zero + Integer + Shr<usize, Output=T> + MoreNumCast
 {
 	isqrt_fast(n.clone()).or_else(
 		|| Some(isqrt_safe(n.clone()))
@@ -56,10 +60,10 @@ pub fn isqrt<T>(n: T) -> T
 /// For zero and one, `num::Zero::zero()` and `num::One::one()` is preferred when they
 ///  are used as the additive/multiplicative identity, and `literal` is used otherwise.
 #[inline]
-pub fn literal<T>(n: isize) -> T
- where T: FromPrimitive,
+pub fn literal<T: MoreNumCast>(n: i32) -> T
+ where T: MoreNumCast,
 {
-	FromPrimitive::from_isize(n).unwrap()
+	T::from_i32(n).unwrap()
 }
 
 /// Computes `pow(x, power) % modulus` using exponentation by squaring.
@@ -94,7 +98,7 @@ fn test_mod_pow()
 // isqrt helper methods
 
 fn isqrt_fast<T>(x: T) -> Option<T>
- where T: FromPrimitive + ToPrimitive,
+ where T: MoreNumCast,
 {
 	x.to_f64().and_then(|f| {
 		// Mantissa is 52 bits, and the square root takes half as many bits, so this
@@ -103,7 +107,7 @@ fn isqrt_fast<T>(x: T) -> Option<T>
 		if f > 20f64.exp2() {
 			None                 // Number too large, bail out!
 		} else {
-			FromPrimitive::from_f64(f.sqrt().floor())
+			T::from_f64(f.sqrt().floor())
 		}
 	})
 }
@@ -140,7 +144,7 @@ fn bench_safe(b: &mut Bencher) {
 #[bench]
 fn bench_safe_bigint(b: &mut Bencher) {
 	b.iter(|| {
-		(0usize..1000).map(|a| isqrt_safe::<BigUint>(FromPrimitive::from_usize(a).unwrap())).collect::<Vec<BigUint>>()
+		(0usize..1000).map(|a| isqrt_safe::<BigUint>(T::from(a).unwrap())).collect::<Vec<BigUint>>()
 	})
 }
 
@@ -169,8 +173,7 @@ fn test_isqrt_consistency()
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use num::FromPrimitive;
-	use num::ToPrimitive;
+	use num::NumCast;
 	use num::bigint::{ToBigUint,BigUint};
 
 	// need to test isqrt with BigInt more rigorously

@@ -11,12 +11,13 @@ use std::fmt::Debug;
 
 use num;
 use num::{Zero,One,Integer};
-use num::{ToPrimitive,FromPrimitive};
+use num::NumCast;
 use num::BigUint;
 use test::Bencher;
 
 use util::literal;
 use util::mod_pow;
+use util::MoreNumCast;
 
 pub trait PrimeTester<T>
  where T: Eq + Clone + Zero + One,
@@ -53,7 +54,7 @@ impl PrimeSieve
 
 impl<T> PrimeTester<T>
 for PrimeSieve
- where T: Eq + Clone + Integer + ToPrimitive,
+ where T: Eq + Clone + Integer + NumCast,
 {
 	//! All of the work involved in identifying prime numbers with a PrimeSieve
 	//!  is done during the sieve's construction, so a PrimeSieve can test primality
@@ -63,9 +64,9 @@ for PrimeSieve
 	//!
 	//! ```
 	//! use factor::{PrimeTester,PrimeSieve};
-	//! 
+	//!
 	//! let tester: Box<PrimeTester<i32>> = Box::new(PrimeSieve::new(42));
-	//! 
+	//!
 	//! assert!(!tester.is_prime(&0)  && !tester.is_composite(&0));
 	//! assert!(!tester.is_prime(&1)  && !tester.is_composite(&1));
 	//! assert!(tester.is_prime(&13)  && !tester.is_composite(&13));
@@ -75,7 +76,7 @@ for PrimeSieve
 	/// Tests a number for primality by indexing the underlying vector.
 	///
 	/// # Panics
-	/// 
+	///
 	/// Panics if ToPrimitive.to_usize() fails (for whatever reason), or if the index
 	///  lies outside the array.
 	// TODO: test panics
@@ -135,7 +136,7 @@ impl MillerRabinTester
 	//  x would be nice, it is unclear how one would check the value of `x` against a
 	//  value which may lie outside the range of `x`'s type...
 	pub fn collect_witnesses<T>(&self, _x: T) -> Vec<T>
-	 where T: Eq + Clone + Integer + FromPrimitive,
+	 where T: Eq + Clone + Integer + MoreNumCast,
 	{
 		// This set of witnesses is known to work for all u64
 		// FIXME: Cite
@@ -149,7 +150,7 @@ impl MillerRabinTester
 
 impl<T> PrimeTester<T>
 for MillerRabinTester
- where T: Eq + Clone + Integer + Shr<usize, Output=T> + Debug + FromPrimitive,
+ where T: Eq + Clone + Integer + Shr<usize, Output=T> + Debug + MoreNumCast,
 {
 	fn is_prime(&self, x: &T) -> bool
 	{
@@ -199,7 +200,7 @@ for MillerRabinTester
 // Decomposes a number `x` into the form `2.pow(k) * d` where `d` is odd,
 //  returning `(k,d)`.
 fn decompose_pow2_odd<T>(x: T) -> (T, T)
- where T: Eq + Clone + Integer + Shr<usize, Output=T> + FromPrimitive,
+ where T: Eq + Clone + Integer + Shr<usize, Output=T> + MoreNumCast,
 {
 	let mut remaining = x;
 	let mut pow2: T = Zero::zero();
@@ -248,4 +249,3 @@ fn bench_mersenne(b: &mut Bencher)
 		MillerRabinTester.is_prime(&mersenne)
 	})
 }
-

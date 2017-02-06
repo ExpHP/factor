@@ -10,16 +10,16 @@ use std::ops::{Shr,Rem};
 use std::mem::swap;
 
 use num::{Zero, One, Integer};
-use num::{FromPrimitive, ToPrimitive};
+use num::NumCast;
 use rand::Rng;
 use rand::weak_rng;
 use rand::distributions::range::SampleRange;
 use bit_set::BitSet;
 
 use factorize;
-use Factors;
+use Factored;
 use Factorizer;
-use util::{isqrt,gcd};
+use util::{isqrt,gcd,MoreNumCast};
 
 pub struct DixonFactorizer<T>
  where T: Clone + Zero + One + Integer
@@ -44,7 +44,7 @@ impl<T> DixonFactorizer<T>
 
 impl<T> Factorizer<T>
 for DixonFactorizer<T>
- where T: Clone + Zero + One + Integer + Shr<usize, Output=T> + SampleRange + FromPrimitive + ToPrimitive,
+ where T: Clone + Zero + One + Integer + Shr<usize, Output=T> + SampleRange + NumCast + MoreNumCast,
 {
 	/// Produce a single factor of `x`.  TrialDivisionFactorizer is deterministic,
 	///  and will always produce the smallest non-trivial factor of any composite number.
@@ -59,7 +59,7 @@ for DixonFactorizer<T>
 
 		let a_count = self.primes.len() + self.extra_count;
 		let mut a_values: Vec<T> = Vec::new();
-		let mut b_factorizations: Vec<Factors<T>> = Vec::new();
+		let mut b_factorizations: Vec<Factored<T>> = Vec::new();
 
 		'a: for _ in (0usize..a_count) {
 			for _ in (0usize..self.max_attempts) {
@@ -118,7 +118,7 @@ for DixonFactorizer<T>
 			if matrix_row.is_all_zero() {
 
 				let mut a_prod: T = One::one();
-				let mut b_prod_factors: Factors<T> = One::one();
+				let mut b_prod_factors: Factored<T> = One::one();
 
 				for index in matrix_row.into_index_set().iter() {
 					a_prod = a_prod * a_values[index].clone();
@@ -147,12 +147,12 @@ for DixonFactorizer<T>
 
 // Utility function that only returns a factorization if it can be constructed
 //  *exclusively* from the given primes.
-fn factorize_limited<T>(x: T, primes: &Vec<T>) -> Option<Factors<T>>
+fn factorize_limited<T>(x: T, primes: &Vec<T>) -> Option<Factored<T>>
  where T: Clone + Zero + One + Integer + SampleRange
 {
 	assert!(!x.is_zero());
 
-	let mut f: Factors<T> = One::one();
+	let mut f: Factored<T> = One::one();
 	let mut c = x;
 	for p in primes.iter() {
 
@@ -260,7 +260,7 @@ impl DixonBitmatrix
 
 
 // Produce matrix from initial input
-fn bit_matrix_from_factorizations<T>(factorizations: &Vec<Factors<T>>, primes: &Vec<T>) -> DixonBitmatrix
+fn bit_matrix_from_factorizations<T>(factorizations: &Vec<Factored<T>>, primes: &Vec<T>) -> DixonBitmatrix
  where T: Clone + Zero + One + Integer
 {
 	let rows: Vec<DixonBitvec> = factorizations.iter().enumerate().map(|(row_index,fact)| {
