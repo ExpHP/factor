@@ -144,7 +144,7 @@ fn bench_safe(b: &mut Bencher) {
 #[bench]
 fn bench_safe_bigint(b: &mut Bencher) {
 	b.iter(|| {
-		(0usize..1000).map(|a| isqrt_safe::<BigUint>(T::from(a).unwrap())).collect::<Vec<BigUint>>()
+		(0i32..1000).map(|a| isqrt_safe::<BigUint>(literal(a))).collect::<Vec<BigUint>>()
 	})
 }
 
@@ -173,7 +173,6 @@ fn test_isqrt_consistency()
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use num::NumCast;
 	use num::bigint::{ToBigUint,BigUint};
 
 	// need to test isqrt with BigInt more rigorously

@@ -14,7 +14,6 @@ use std::collections::BTreeMap;
 use num;
 use num::{One,FromPrimitive};
 use num::Num;
-use num::NumCast;
 
 use ::FactorExt;
 

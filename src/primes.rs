@@ -11,7 +11,6 @@ use std::fmt::Debug;
 
 use num;
 use num::{Zero,One,Integer};
-use num::NumCast;
 use num::BigUint;
 use test::Bencher;
 
@@ -54,7 +53,7 @@ impl PrimeSieve
 
 impl<T> PrimeTester<T>
 for PrimeSieve
- where T: Eq + Clone + Integer + NumCast,
+ where T: Eq + Clone + Integer + MoreNumCast,
 {
 	//! All of the work involved in identifying prime numbers with a PrimeSieve
 	//!  is done during the sieve's construction, so a PrimeSieve can test primality

@@ -26,9 +26,6 @@ extern crate bit_set;
 
 mod primes;
 mod factorizer;
-mod factorizer_dixon;
-mod factorizer_pollard;
-mod factorizer_sieve;
 mod iter_ext;
 mod util;
 mod factored;
@@ -46,9 +43,9 @@ pub use factorizer::FactorSieve;
 pub use factorizer::SafeFactorizer;
 pub use factorizer::DefaultFactorizer;
 pub use factorizer::ListFactorizer;
-//pub use factorizer_dixon::DixonFactorizer; // FIXME broken, has disabled tests
-pub use factorizer_pollard::PollardBrentFactorizer;
-pub use factorizer_pollard::PollardBrentFactorizerBigInt; // FIXME total hack
+//pub use factorizer::DixonFactorizer; // FIXME broken, has disabled tests
+pub use factorizer::PollardBrentFactorizer;
+pub use factorizer::PollardBrentFactorizerBigInt; // FIXME total hack
 pub use iter_ext::FactorExt;
 pub use util::isqrt;
 pub use util::gcd;
@@ -61,7 +58,6 @@ use std::iter::FromIterator;
 use std::ops::Shr;
 
 use num::{Zero,One,Integer};
-use num::{FromPrimitive,ToPrimitive,NumCast};
 
 /// Factors a number using `DefaultFactorizer`.
 pub fn factorize<T>(x: T) -> Factored<T>

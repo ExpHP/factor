@@ -6,9 +6,10 @@
 // This file may not be copied, modified, or distributed except according
 // to those terms.
 
-use num::{Zero, One, Integer, NumCast};
+use num::{Zero, One, Integer};
 use ::Factorizer;
 use ::Factored;
+use util::MoreNumCast;
 
 /// An object for efficiently factorizing many small numbers.
 ///
@@ -23,7 +24,7 @@ impl FactorSieve
 {
 	/// Compute a factor sieve for numbers `< limit`.
 	pub fn new<T>(limit: T) -> Self
-	 where T: NumCast + Integer,
+	 where T: MoreNumCast + Integer,
 	{
 		assert!(limit >= T::zero());
 		FactorSieve { sieve: factor_sieve_simple(limit.to_usize().unwrap()) }
@@ -36,10 +37,10 @@ impl FactorSieve {
 }
 
 impl<T> Factorizer<T> for FactorSieve
- where T: Clone + Zero + One + Integer + NumCast,
+ where T: Clone + Zero + One + Integer + MoreNumCast,
 {
 	fn get_factor(&self, x: &T) -> T
-	{ T::from(self.sieve[x.to_usize().unwrap()]).unwrap() }
+	{ T::from_usize(self.sieve[x.to_usize().unwrap()]).unwrap() }
 
 	fn factorize(&self, x: T) -> Factored<T>
 	{ ::factorizer::helper::always_smallest_factorize(self, x) }

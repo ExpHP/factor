@@ -30,10 +30,13 @@ pub use TrialDivisionFactorizer as SafeFactorizer;
 // /// The `Factorizer` used by the `factor::factorize` method.
 pub use TrialDivisionFactorizer as DefaultFactorizer;
 
-pub use factorizer_sieve::FactorSieve;
-pub use factorizer_dixon::DixonFactorizer;
-pub use factorizer_pollard::PollardBrentFactorizer;
-pub use factorizer_pollard::PollardBrentFactorizerBigInt;
+mod sieve;
+mod dixon;
+mod pollard;
+pub use self::sieve::FactorSieve;
+pub use self::dixon::DixonFactorizer;
+pub use self::pollard::PollardBrentFactorizer;
+pub use self::pollard::PollardBrentFactorizerBigInt;
 
 //// XXX: Would reduce some of the pain in keeping impl type bounds consistent, but would also require the
 ////      trait to be explicitly implemented for all applicable types, which arguably sucks just as much.
@@ -326,17 +329,17 @@ mod tests {
 
 	use num;
 	use num::{BigUint, BigInt};
-	use num::{Zero, One, Integer};
-	use num::NumCast;
+	use num::{Zero, One, Integer, ToPrimitive};
 	use test::Bencher;
 
 	use util::literal;
+	use util::MoreNumCast;
 	use primes::PrimeSieve;
 	use primes::MillerRabinTester;
 
 	//  A simple test to factorize 242 as an arbitrary data type using an arbitrary factorizer.
 	fn test_242<T, U>(factorizer: U)
-	 where T: Clone + Debug + Integer + NumCast,
+	 where T: Clone + Debug + Integer + MoreNumCast,
 	       U: Factorizer<T>,
 	{
 		// 242 = 2 * 11 * 11
@@ -351,9 +354,9 @@ mod tests {
 
 		// Check factorization against expected
 		for (k,v) in expected.iter().enumerate() {
-			let k_t = T::from(k).unwrap();  // cast k to T
-			let v_t = T::from(*v).unwrap(); // cast v to whatever the heck it is today
-			assert_eq!(factors.get(&k_t), v_t);
+			let k_t = T::from_usize(k).unwrap();  // cast k to T
+			let v_t = T::from_usize(*v).unwrap(); // cast v to whatever the heck it is today
+			assert_eq!(T::from_usize(factors.get(&k_t)).unwrap(), v_t);
 		}
 	}
 
@@ -384,14 +387,14 @@ mod tests {
 
 	fn make_list<F,T>(factorizer: F, limit: T) -> ListFactorizer<T>
 	 where F: Factorizer<T>,
-	       T: Clone + Debug + Integer + NumCast,
+	       T: Clone + Debug + Integer + MoreNumCast,
 	{
 		return ListFactorizer::compute_new(limit, &factorizer);
 	}
 
 	fn make_list_stubborn<F,T>(factorizer: F, limit: T) -> ListFactorizer<T>
 	 where F: Factorizer<T>,
-	       T: Clone + Debug + Integer + NumCast,
+	       T: Clone + Debug + Integer + MoreNumCast,
 	{
 		let primes = PrimeSieve::new(limit.to_usize().unwrap());
 		let stubborn = StubbornFactorizer::new(primes, factorizer);

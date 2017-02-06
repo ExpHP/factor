@@ -17,7 +17,6 @@ use num::{FromPrimitive, ToPrimitive};
 use rand::Rng;
 use rand::weak_rng;
 use num::BigInt;
-use num::NumCast;
 use num_bigint::RandBigInt;
 use rand::distributions::range::SampleRange;
 
