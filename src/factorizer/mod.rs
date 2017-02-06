@@ -72,7 +72,13 @@ pub trait TryFactor<T>
 		if x == &T::one() { None }
 		else { Some(self.try_factor(x).unwrap_or(x.clone())) }
 	}
+}
 
+/// Provides the additional guarantee that `try_factor` always identifies composites.
+/// (there are no spurious `None`s)
+pub trait SureFactor<T>: TryFactor<T>
+ where T: Clone + Zero + One + Integer
+{
 	/// Builds a complete prime factorization of a number.  A default implementation is provided
 	///  which calls `try_factor()` recursively on the factors produced.
 	///
@@ -201,7 +207,12 @@ for TrialDivision
 		// x is 1 or prime
 		return None;
 	}
+}
 
+impl<T> SureFactor<T>
+for TrialDivision
+ where T: Clone + Zero + One + Integer + Shr<usize, Output=T> + MoreNumCast,
+{
 	fn factorize(&self, x: T) -> Factored<T>
 	{ self::helper::always_smallest_factorize(self, x) }
 }
@@ -218,9 +229,9 @@ for TrialDivision
 
 // FIXME this shouldn't exist except maybe for testing purposes.
 //       FactorSieve is the way to go.
-/// Factors numbers by using results cached from another `TryFactor`.
+/// Factors numbers by using results cached from another `SureFactor`.
 ///
-/// Stores factors produced by another `TryFactor` for quick lookup. Only a single non-trivial
+/// Stores factors produced by another `SureFactor` for quick lookup. Only a single non-trivial
 ///  factor is stored for each composite number, from which the full decomposition can be
 ///  gathered recursively.
 #[derive(Clone, Debug)]
@@ -238,7 +249,7 @@ impl<T> ListFactorizer<T>
 	///  provided `factorizer` to generate them.  Be sure to wrap any nondeterministic
 	///  factorizer in a `Stubborn` beforehand to ensure that only correct results
 	///  get cached in the list.
-	pub fn compute_new(n: T, factorizer: &TryFactor<T>) -> Self {
+	pub fn compute_new(n: T, factorizer: &SureFactor<T>) -> Self {
 		ListFactorizer {
 			//factors: num::iter::range(Zero::zero(), n).map(|x| factorizer.try_factor(&x).unwrap()).collect(),
 			factors: num::iter::range(T::zero(), n.clone()).map(|x| factorizer.try_factor(&x).unwrap_or(x.clone())).take(n.to_usize().unwrap()).collect(), // XXX HACK: _or(one())
@@ -263,7 +274,12 @@ for ListFactorizer<T>
 	}
 }
 
-/// A `TryFactor` which doesn't take "no" for an answer.
+impl<T> SureFactor<T>
+for ListFactorizer<T>
+ where T: Clone + Integer + MoreNumCast,
+{ }
+
+/// A `SureFactor` wrapper around a `TryFactor`.
 ///
 /// It first tests the number for primality with its `PrimeTester` object.
 /// If the number is not prime, the `Stubborn` will delegate to another `TryFactor`,
@@ -311,6 +327,7 @@ for Stubborn<P,F,T>
 
 		// We are certain that x is composite, so keep trying to factor until we succeed
 		if self.prime_tester.is_composite(x) {
+			// FIXME: Maybe there should be a panic on too many loop iterations...
 			loop {
 				if let Some(factor) = self.factorizer.try_factor(x) {
 					return Some(factor);
@@ -321,6 +338,14 @@ for Stubborn<P,F,T>
 		} else { None }
 	}
 }
+
+impl<P,F,T> SureFactor<T>
+for Stubborn<P,F,T>
+ where P: PrimeTester<T>,
+       F: TryFactor<T>,
+       T: Clone + Zero + One + Integer,
+       T: Debug,
+{ }
 
 // Tests
 
@@ -343,7 +368,7 @@ mod tests {
 	//  A simple test to factorize 242 as an arbitrary data type using an arbitrary factorizer.
 	fn test_242<T, U>(factorizer: U)
 	 where T: Clone + Debug + Integer + MoreNumCast,
-	       U: TryFactor<T>,
+	       U: SureFactor<T>,
 	{
 		// 242 = 2 * 11 * 11
 		let x_t: T = literal(242);
@@ -389,7 +414,7 @@ mod tests {
 	}
 
 	fn make_list<F,T>(factorizer: F, limit: T) -> ListFactorizer<T>
-	 where F: TryFactor<T>,
+	 where F: SureFactor<T>,
 	       T: Clone + Debug + Integer + MoreNumCast,
 	{
 		return ListFactorizer::compute_new(limit, &factorizer);

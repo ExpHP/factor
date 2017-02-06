@@ -22,7 +22,7 @@ use rand::distributions::range::SampleRange;
 
 use factorize;
 use Factored;
-use TryFactor;
+use prelude::*;
 use util::literal;
 use util::gcd;
 use util::mod_pow;

@@ -33,10 +33,8 @@ pub mod prelude;
 
 pub use primes::PrimeTester;
 pub use primes::PrimeSieve;
-pub use factorizer::TryFactor;
 //pub use factorizer::FermatFactorizer;
 //pub use factorizer::Dixon; // FIXME broken, has disabled tests
-pub use iter_ext::FactorExt;
 pub use util::isqrt;
 pub use util::gcd;
 pub use factored::Factored;
@@ -53,6 +51,7 @@ use util::MoreNumCast;
 
 use std::iter::FromIterator;
 use std::ops::Shr;
+use prelude::*;
 
 use num::{Zero,One,Integer};
 

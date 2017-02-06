@@ -8,4 +8,5 @@
 
 //! A barebones set of imports to cover the majority of use-cases,
 //! along with extension traits which would be easy to forget.
-pub use ::FactorExt;
+pub use ::iter_ext::FactorExt;
+pub use ::factorizer::{TryFactor, SureFactor};

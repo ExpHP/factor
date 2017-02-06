@@ -7,7 +7,7 @@
 // to those terms.
 
 use num::{Zero, One, Integer};
-use ::TryFactor;
+use prelude::*;
 use ::Factored;
 use util::MoreNumCast;
 
@@ -44,7 +44,11 @@ impl<T> TryFactor<T> for FactorSieve
 		if x == &T::one() { None }
 		else { Some(T::from_usize(self.sieve[x.to_usize().unwrap()]).unwrap()) }
 	}
+}
 
+impl<T> SureFactor<T> for FactorSieve
+ where T: Clone + Zero + One + Integer + MoreNumCast,
+{
 	fn factorize(&self, x: T) -> Factored<T>
 	{ ::factorizer::helper::always_smallest_factorize(self, x) }
 }

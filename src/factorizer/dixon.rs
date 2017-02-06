@@ -17,7 +17,7 @@ use bit_set::BitSet;
 
 use factorize;
 use Factored;
-use TryFactor;
+use prelude::*;
 use util::{isqrt,gcd,MoreNumCast};
 
 pub struct Dixon<T>
@@ -45,11 +45,7 @@ impl<T> TryFactor<T>
 for Dixon<T>
  where T: Clone + Zero + One + Integer + Shr<usize, Output=T> + SampleRange + MoreNumCast,
 {
-	/// Produce a single factor of `x`.  TrialDivision is deterministic,
-	///  and will always produce the smallest non-trivial factor of any composite number.
-	///  Thus, the number it returns is also always prime.
-	///
-	/// The runtime scales linearly with the size of the smallest factor of `x`.
+	// FIXME docs
 	fn try_factor(&self, x: &T) -> Option<T>
 	{
 		// Step 1: Collect congruences of the form a^2 = b (mod x), where b < x
