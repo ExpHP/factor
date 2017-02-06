@@ -40,7 +40,7 @@ for PollardBrent
 {
 	/// Produce a single factor of `x`.  PollardBrent is nondeterministic,
 	/// and may sometimes fail to produce a non-trivial factor for composite `x`.
-	fn try_factor(&self, x: &T) -> T {
+	fn try_factor_(&self, x: &T) -> T {
 		let mut rng = weak_rng();
 		do_pollard(x, |a,b| rng.gen_range(a.clone(), b.clone()))
 	}
@@ -49,7 +49,7 @@ for PollardBrent
 impl TryFactor<BigInt>
 for PollardBrentBigInt
 {
-	fn try_factor(&self, x: &BigInt) -> BigInt {
+	fn try_factor_(&self, x: &BigInt) -> BigInt {
 		let mut rng = weak_rng();
 		do_pollard(x, |a,b| rng.gen_bigint_range(a, b))
 	}

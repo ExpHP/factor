@@ -50,7 +50,7 @@ for Dixon<T>
 	///  Thus, the number it returns is also always prime.
 	///
 	/// The runtime scales linearly with the size of the smallest factor of `x`.
-	fn try_factor(&self, x: &T) -> T
+	fn try_factor_(&self, x: &T) -> T
 	{
 		// Step 1: Collect congruences of the form a^2 = b (mod x), where b < x
 		//          and b is smooth (composed only of small primes).
