@@ -22,14 +22,6 @@ use ::Factored;
 use primes::PrimeTester;
 use iter_ext::FactorExt;
 
-// Type-Synonyms, for semantic purposes.
-// (alas, re-exports don't appear to take docstrings)
-
-// /// A deterministic `Factorizer` that is guaranteed to work on any number, but may be fast.
-pub use TrialDivision as SafeFactorizer;
-// /// The `Factorizer` used by the `factor::factorize` method.
-pub use TrialDivision as DefaultFactorizer;
-
 mod sieve;
 mod dixon;
 mod pollard;
@@ -457,7 +449,7 @@ mod tests {
 
 	#[bench]
 	fn bench_factors_construction(b: &mut Bencher) {
-		let sieve = ::FactorSieve::new(10000u64);
+		let sieve = ::factorizer::FactorSieve::new(10000u64);
 		b.iter(|| {
 			(1..10000).map(|x| sieve.factorize(x).iter().count())
 				.fold(0, |a,b| a+b)
@@ -466,7 +458,7 @@ mod tests {
 
 	#[bench]
 	fn bench_factors_product(b: &mut Bencher) {
-		let sieve = ::FactorSieve::new(10000u64);
+		let sieve = ::factorizer::FactorSieve::new(10000u64);
 		b.iter(|| {
 			(3000..4000).map(|x| sieve.factorize(x))
 				.fold(::Factored::<u64>::one(), |a,b| a*b)

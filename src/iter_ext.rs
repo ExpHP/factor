@@ -34,7 +34,7 @@ pub trait FactorExt<X>: Iterator<Item=(X,usize)>
 	/// ```
 	/// use factor::prelude::*;
 	///
-	/// let f = factorize(20u64);
+	/// let f = factor::factorize(20u64);
 	/// assert_eq!(f.into_iter().factor_product(), 20);
 	/// ```
 	fn factor_product(self) -> X
@@ -58,7 +58,7 @@ pub trait FactorExt<X>: Iterator<Item=(X,usize)>
 	/// ```
 	/// use factor::prelude::*;
 	///
-	/// let f = factorize(20u64);
+	/// let f = factor::factorize(20u64);
 	/// assert_eq!(f.into_iter().divisor_count(), 6);
 	/// ```
 	fn divisor_count(self) -> X
@@ -83,7 +83,7 @@ pub trait FactorExt<X>: Iterator<Item=(X,usize)>
 	/// ```
 	/// use factor::prelude::*;
 	///
-	/// let f = factorize(20u64);
+	/// let f = factor::factorize(20u64);
 	/// assert_eq!(f.into_iter().divisor_sum(), 42);
 	/// ```
 	fn divisor_sum(self) -> X
@@ -108,7 +108,7 @@ pub trait FactorExt<X>: Iterator<Item=(X,usize)>
 	/// ```
 	/// use factor::prelude::*;
 	///
-	/// let f = factorize(20u64);
+	/// let f = factor::factorize(20u64);
 	/// assert_eq!(f.into_iter().totient(), 8);
 	/// ```
 	fn totient(self) -> X

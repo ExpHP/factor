@@ -33,23 +33,20 @@ pub mod prelude;
 
 pub use primes::PrimeTester;
 pub use primes::PrimeSieve;
-pub use primes::MillerRabin;
 pub use factorizer::Factorizer;
-pub use factorizer::TrialDivision;
-pub use factorizer::Stubborn;
-pub use factorizer::FactorSieve;
 //pub use factorizer::FermatFactorizer;
-//pub use factorizer::GeneralFactorizer;
-pub use factorizer::SafeFactorizer;
-pub use factorizer::DefaultFactorizer;
-pub use factorizer::ListFactorizer;
 //pub use factorizer::Dixon; // FIXME broken, has disabled tests
-pub use factorizer::PollardBrent;
-pub use factorizer::PollardBrentBigInt; // FIXME total hack
 pub use iter_ext::FactorExt;
 pub use util::isqrt;
 pub use util::gcd;
 pub use factored::Factored;
+
+// Type-Synonyms, for semantic purposes.
+// (NOTE: alas, the docstrings don't appear to take effect)
+/// A deterministic `Factorizer` that is guaranteed to work on any number, but may be fast.
+pub use factorizer::TrialDivision as SafeFactorizer;
+/// The `Factorizer` used by the `factor::factorize` method.
+pub use factorizer::TrialDivision as DefaultFactorizer;
 
 use util::literal;
 use util::MoreNumCast;
