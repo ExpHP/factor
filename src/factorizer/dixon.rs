@@ -50,7 +50,7 @@ for Dixon<T>
 	///  Thus, the number it returns is also always prime.
 	///
 	/// The runtime scales linearly with the size of the smallest factor of `x`.
-	fn try_factor_(&self, x: &T) -> T
+	fn try_factor(&self, x: &T) -> Option<T>
 	{
 		// Step 1: Collect congruences of the form a^2 = b (mod x), where b < x
 		//          and b is smooth (composed only of small primes).
@@ -76,7 +76,7 @@ for Dixon<T>
 					// Just to be sure...
 					assert!(candidate != One::one());
 					assert!(candidate != x.clone());
-					return candidate;
+					return Some(candidate);
 				}
 
 				// Try to factorize b using only small primes
@@ -131,14 +131,14 @@ for Dixon<T>
 				// a - sqrt(b) has a high chance of sharing a nontrivial factor in common with x
 				let candidate = gcd(a_prod - b_prodsqrt,  x.clone());
 
-				if candidate != One::one() && candidate != x.clone() {
-					return candidate;
+				if candidate != One::one() && &candidate != x {
+					return Some(candidate);
 				}
 			}
 		}
 
-		// x *looks* like a prime...
-		return x.clone();
+		// x *looks* like a prime, but we cannot truly tell...
+		None
 	}
 }
 

@@ -40,7 +40,7 @@ for PollardBrent
 {
 	/// Produce a single factor of `x`.  PollardBrent is nondeterministic,
 	/// and may sometimes fail to produce a non-trivial factor for composite `x`.
-	fn try_factor_(&self, x: &T) -> T {
+	fn try_factor(&self, x: &T) -> Option<T> {
 		let mut rng = weak_rng();
 		do_pollard(x, |a,b| rng.gen_range(a.clone(), b.clone()))
 	}
@@ -49,7 +49,7 @@ for PollardBrent
 impl TryFactor<BigInt>
 for PollardBrentBigInt
 {
-	fn try_factor_(&self, x: &BigInt) -> BigInt {
+	fn try_factor(&self, x: &BigInt) -> Option<BigInt> {
 		let mut rng = weak_rng();
 		do_pollard(x, |a,b| rng.gen_bigint_range(a, b))
 	}
@@ -57,7 +57,7 @@ for PollardBrentBigInt
 
 /// Produce a single factor of `x`.  PollardBrent is nondeterministic,
 /// and may sometimes fail to produce a non-trivial factor for composite `x`.
-fn do_pollard<'c,T,F>(x: &'c T, mut rand_range: F) -> T
+fn do_pollard<'c,T,F>(x: &'c T, mut rand_range: F) -> Option<T>
  where T: Clone + Zero + One + Integer + Shr<usize, Output=T> + MoreNumCast,
        F: for<'a,'b> FnMut(&'a T, &'b T) -> T,
 {
@@ -67,9 +67,10 @@ fn do_pollard<'c,T,F>(x: &'c T, mut rand_range: F) -> T
 	// So let it be known that this is NOT a well-written function:
 	#![allow(unused_mut)]
 
-	if x.is_even() { return literal(2); }
-	if x.is_multiple_of(&literal(3)) { return literal(3); }
-	if x < &literal(2) { return x.clone(); }
+	if x < &T::zero() { panic!("x < 0"); }
+	if x.is_even() { return Some(literal(2)); }
+	if x.is_multiple_of(&literal(3)) { return Some(literal(3)); }
+	if x == &T::one() { return None; }
 
 	let one = One::one();
 	let mut y: T = rand_range(&one, &x); // current value in the sequence:  y := y^2 + c (mod n)
@@ -131,9 +132,9 @@ fn do_pollard<'c,T,F>(x: &'c T, mut rand_range: F) -> T
 		}
 	}
 
-	// At this point, g is a nontrivial factor, or g == x.
-	// In the latter case, g may still be composite (a "pseudoprime")
-	return g;
+	// At this point, we may or may not have identified a nontrivial factor.
+	debug_assert!(g != One::one());
+	if &g == x { None } else { Some(g) }
 }
 
 // computes (y**2 + c) % x

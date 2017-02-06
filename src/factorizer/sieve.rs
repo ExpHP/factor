@@ -39,8 +39,11 @@ impl FactorSieve {
 impl<T> TryFactor<T> for FactorSieve
  where T: Clone + Zero + One + Integer + MoreNumCast,
 {
-	fn try_factor_(&self, x: &T) -> T
-	{ T::from_usize(self.sieve[x.to_usize().unwrap()]).unwrap() }
+	fn try_factor(&self, x: &T) -> Option<T>
+	{
+		if x == &T::one() { None }
+		else { Some(T::from_usize(self.sieve[x.to_usize().unwrap()]).unwrap()) }
+	}
 
 	fn factorize(&self, x: T) -> Factored<T>
 	{ ::factorizer::helper::always_smallest_factorize(self, x) }

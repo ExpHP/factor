@@ -45,22 +45,6 @@ pub use self::pollard::PollardBrentBigInt;
 pub trait TryFactor<T>
  where T: Clone + Zero + One + Integer
 {
-	// FIXME: This shouldn't exist.
-	//        It is here temporarily to aid the transitioning API.
-	// Produces a single (not necessarily prime) factor of a number `x`.  Some implementations of
-	//  `TryFactor` are deterministic and always produce the same factor for the same `x`, while
-	//  others may have an element of randomness.
-	//
-	// However, all Factorizers are expected to meet the following guarantees:
-	//
-	// * `try_factor(x)` for any non-composite `x` (0, 1, or primes) returns `x`.
-	// * `try_factor(x)` for any composite `x` produces an arbitrary but non-trivial factor of `x`.
-	//   (this factor is allowed to be composite)
-	//
-	// Keep in mind that, in addition to the value returned, another factor can be obtained by
-	//  dividing `x` by the value.
-	fn try_factor_(&self, x: &T) -> T;
-
 	/// Attempt to produce a nontrivial factor of `x`.
 	///
 	/// A factor is nontrivial if it is neither equal to 1 nor x.
@@ -75,11 +59,7 @@ pub trait TryFactor<T>
 	/// * If `try_factor(x)` returns `Some(f)`, then `x` is divisible by `f`
 	///   and `f != x`.  `f` is allowed to be composite.
 	///   The converse is not a guarantee.
-	fn try_factor(&self, x: &T) -> Option<T> {
-		if x == &T::zero() { return Some(T::one() + T::one()); } // XXX
-		let f = self.try_factor_(x);
-		if &f == x { None } else { Some(f) }
-	}
+	fn try_factor(&self, x: &T) -> Option<T>;
 
 	// FIXME: Should be part of its own trait for deterministic factorizers
 	/// Produce the smallest prime factor of `x`.
@@ -90,7 +70,7 @@ pub trait TryFactor<T>
 	fn first_prime(&self, x: &T) -> Option<T> {
 		if x == &T::zero() { return Some(T::one() + T::one()); } // XXX
 		if x == &T::one() { None }
-		else { Some(self.try_factor_(x)) }
+		else { Some(self.try_factor(x).unwrap_or(x.clone())) }
 	}
 
 	/// Builds a complete prime factorization of a number.  A default implementation is provided
@@ -200,11 +180,10 @@ for TrialDivision
 	///  Thus, the number it returns is also always prime.
 	///
 	/// The runtime scales linearly with the size of the smallest factor of `x`.
-	fn try_factor_(&self, x: &T) -> T
+	fn try_factor(&self, x: &T) -> Option<T>
 	{
-		if x.is_zero() { return Zero::zero() };
-
-		if x.is_even() { return literal(2); }
+		if x < &T::zero() { panic!("x < 0"); }
+		if x.is_even() { return Some(literal(2)); }
 
 		let start: T = literal(3);
 		let stop:  T = isqrt(x.clone()) + literal(2);
@@ -214,13 +193,13 @@ for TrialDivision
 		let mut odd = start;
 		while odd < stop {
 			if x.is_multiple_of(&odd) {
-				return odd;
+				return Some(odd);
 			}
 			odd = odd + step.clone();
 		};
 
-		// x is prime
-		return x.clone();
+		// x is 1 or prime
+		return None;
 	}
 
 	fn factorize(&self, x: T) -> Factored<T>
@@ -262,8 +241,7 @@ impl<T> ListFactorizer<T>
 	pub fn compute_new(n: T, factorizer: &TryFactor<T>) -> Self {
 		ListFactorizer {
 			//factors: num::iter::range(Zero::zero(), n).map(|x| factorizer.try_factor(&x).unwrap()).collect(),
-			factors: ::std::iter::once(T::zero()) // XXX
-				.chain(num::iter::range(T::one(), n.clone()).map(|x| factorizer.try_factor_(&x))).take(n.to_usize().unwrap()).collect(), // XXX HACK: _or(one())
+			factors: num::iter::range(T::zero(), n.clone()).map(|x| factorizer.try_factor(&x).unwrap_or(x.clone())).take(n.to_usize().unwrap()).collect(), // XXX HACK: _or(one())
 		}
 	}
 }
@@ -278,9 +256,10 @@ for ListFactorizer<T>
 	///
 	/// May panic. (TODO: When?)
 	#[inline]
-	fn try_factor_(&self, x: &T) -> T
+	fn try_factor(&self, x: &T) -> Option<T>
 	{
-		self.factors[x.to_usize().unwrap()].clone()
+		let f = self.factors[x.to_usize().unwrap()].clone();
+		if &f == x { None } else { Some(f) }
 	}
 }
 
@@ -325,20 +304,21 @@ for Stubborn<P,F,T>
        T: Clone + Zero + One + Integer,
        T: Debug,
 {
-	fn try_factor_(&self, x: &T) -> T
+	fn try_factor(&self, x: &T) -> Option<T>
 	{
-		if self.prime_tester.is_composite(x) {
-			// We are certain that x is composite, so keep trying to factor until we succeed
-			loop {
-				let factor = self.factorizer.try_factor_(x);
+		// XXX maybe we want to redefine "composite" to include zero?
+		if x.is_zero() { return Some(T::one() + T::one()); }
 
-				if &factor != x { return factor; };
+		// We are certain that x is composite, so keep trying to factor until we succeed
+		if self.prime_tester.is_composite(x) {
+			loop {
+				if let Some(factor) = self.factorizer.try_factor(x) {
+					return Some(factor);
+				};
 			}
 
-		} else {
-			// x is 0, 1, or prime.  Or so says the prime tester, at least.
-			x.clone()
-		}
+		// x is 1, or prime.  Or so says the prime tester, at least.
+		} else { None }
 	}
 }
 
