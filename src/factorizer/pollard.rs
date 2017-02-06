@@ -22,7 +22,7 @@ use rand::distributions::range::SampleRange;
 
 use factorize;
 use Factored;
-use Factorizer;
+use TryFactor;
 use util::literal;
 use util::gcd;
 use util::mod_pow;
@@ -34,22 +34,22 @@ use util::MoreNumCast;
 pub struct PollardBrent;
 pub struct PollardBrentBigInt;
 
-impl<T> Factorizer<T>
+impl<T> TryFactor<T>
 for PollardBrent
  where T: Clone + Zero + One + Integer + Shr<usize, Output=T> + SampleRange + MoreNumCast,
 {
 	/// Produce a single factor of `x`.  PollardBrent is nondeterministic,
 	/// and may sometimes fail to produce a non-trivial factor for composite `x`.
-	fn get_factor(&self, x: &T) -> T {
+	fn try_factor(&self, x: &T) -> T {
 		let mut rng = weak_rng();
 		do_pollard(x, |a,b| rng.gen_range(a.clone(), b.clone()))
 	}
 }
 
-impl Factorizer<BigInt>
+impl TryFactor<BigInt>
 for PollardBrentBigInt
 {
-	fn get_factor(&self, x: &BigInt) -> BigInt {
+	fn try_factor(&self, x: &BigInt) -> BigInt {
 		let mut rng = weak_rng();
 		do_pollard(x, |a,b| rng.gen_bigint_range(a, b))
 	}

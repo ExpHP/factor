@@ -42,27 +42,27 @@ pub use self::pollard::PollardBrentBigInt;
 //       wrappers instead).
 
 /// An interface for factorizing positive integers.
-pub trait Factorizer<T>
+pub trait TryFactor<T>
  where T: Clone + Zero + One + Integer
 {
 	// TODO: Perhaps more sensible to return `1` for non-composite (so that division by the result
 	//       is safe without needing to check for zero)
 	/// Produces a single (not necessarily prime) factor of a number `x`.  Some implementations of
-	///  `Factorizer` are deterministic and always produce the same factor for the same `x`, while
+	///  `TryFactor` are deterministic and always produce the same factor for the same `x`, while
 	///  others may have an element of randomness.
 	///
 	/// However, all Factorizers are expected to meet the following guarantees:
 	///
-	/// * `get_factor(x)` for any non-composite `x` (0, 1, or primes) returns `x`.
-	/// * `get_factor(x)` for any composite `x` produces an arbitrary but non-trivial factor of `x`.
+	/// * `try_factor(x)` for any non-composite `x` (0, 1, or primes) returns `x`.
+	/// * `try_factor(x)` for any composite `x` produces an arbitrary but non-trivial factor of `x`.
 	///   (this factor is allowed to be composite)
 	///
 	/// Keep in mind that, in addition to the value returned, another factor can be obtained by
 	///  dividing `x` by the value.
-	fn get_factor(&self, x: &T) -> T;
+	fn try_factor(&self, x: &T) -> T;
 
 	/// Builds a complete prime factorization of a number.  A default implementation is provided
-	///  which calls `get_factor()` recursively on the factors produced.
+	///  which calls `try_factor()` recursively on the factors produced.
 	///
 	/// Construction of a `Factorization` representing zero is not allowed, therefore
 	/// `factorize(0)` is illegal.  Implementations are expected to check for this
@@ -78,20 +78,20 @@ pub mod helper {
 
 	use ::Factored;
 
-	/// The default implementation of `Factorizer::factorize`.
+	/// The default implementation of `TryFactor::factorize`.
 	///
 	/// Factorizes a number by recursively factorizing both the
 	///  produced factor and the remaining part.
 	///
 	/// Suitable for `Factorizers` which may return a composite number.
 	pub fn recursive_factorize<F,T>(factorizer: &F, x: T) -> Factored<T>
-	 where F: Factorizer<T>, T: Clone + Zero + One + Integer,
+	 where F: TryFactor<T>, T: Clone + Zero + One + Integer,
 	{
 		debug_assert!(x >= T::zero());
 		if x == T::zero() { panic!("Zero has no factorization") }
 		if x == T::one() { return One::one(); }
 
-		let a = factorizer.get_factor(&x);
+		let a = factorizer.try_factor(&x);
 
 		// Non-composite point to themselves
 		if a == x {
@@ -108,12 +108,12 @@ pub mod helper {
 
 	// NOTE: informal benchmarks indicate that the detectable speedup here is fairly
 	// modest (a factor of ~2-3).
-	/// A specialized implementation of `Factorizer::factorize` for certain types.
+	/// A specialized implementation of `TryFactor::factorize` for certain types.
 	///
 	/// This is an optimized implementation for Factorizers which always produce
 	///  the smallest nontrivial factor of any composite.
 	pub fn always_smallest_factorize<F,T>(factorizer: &F, x: T) -> Factored<T>
-	 where F: Factorizer<T>, T: Clone + Zero + One + Integer,
+	 where F: TryFactor<T>, T: Clone + Zero + One + Integer,
 	{
 		debug_assert!(x >= T::zero());
 		if x == T::zero() { panic!("Zero has no factorization") }
@@ -127,14 +127,14 @@ pub mod helper {
 		// where iter is an imaginary iterator giving one prime at a time (with repeats)
 
 		// begin first group
-		let mut prev = factorizer.get_factor(&x);
+		let mut prev = factorizer.try_factor(&x);
 		let mut x = x/prev.clone();
 		let mut count = 1;
 		debug_assert!(prev != T::one());
 
 		let mut out = vec![];
 		while x != T::one() {
-			let p = factorizer.get_factor(&x);
+			let p = factorizer.try_factor(&x);
 			if p != prev {
 				debug_assert!(p > prev, "non-sorted primes in always_smallest_factorize");
 				// start new group
@@ -162,7 +162,7 @@ pub mod helper {
 pub struct TrialDivision;
 
 
-impl<T> Factorizer<T>
+impl<T> TryFactor<T>
 for TrialDivision
  where T: Clone + Zero + One + Integer + Shr<usize, Output=T> + MoreNumCast,
 {
@@ -171,7 +171,7 @@ for TrialDivision
 	///  Thus, the number it returns is also always prime.
 	///
 	/// The runtime scales linearly with the size of the smallest factor of `x`.
-	fn get_factor(&self, x: &T) -> T
+	fn try_factor(&self, x: &T) -> T
 	{
 		if x.is_zero() { return Zero::zero() };
 
@@ -210,9 +210,9 @@ for TrialDivision
 
 // FIXME this shouldn't exist except maybe for testing purposes.
 //       FactorSieve is the way to go.
-/// Factors numbers by using results cached from another `Factorizer`.
+/// Factors numbers by using results cached from another `TryFactor`.
 ///
-/// Stores factors produced by another `Factorizer` for quick lookup. Only a single non-trivial
+/// Stores factors produced by another `TryFactor` for quick lookup. Only a single non-trivial
 ///  factor is stored for each composite number, from which the full decomposition can be
 ///  gathered recursively.
 #[derive(Clone, Debug)]
@@ -230,14 +230,14 @@ impl<T> ListFactorizer<T>
 	///  provided `factorizer` to generate them.  Be sure to wrap any nondeterministic
 	///  factorizer in a `Stubborn` beforehand to ensure that only correct results
 	///  get cached in the list.
-	pub fn compute_new(n: T, factorizer: &Factorizer<T>) -> Self {
+	pub fn compute_new(n: T, factorizer: &TryFactor<T>) -> Self {
 		ListFactorizer {
-			factors: num::iter::range(Zero::zero(), n).map(|x| factorizer.get_factor(&x)).collect(),
+			factors: num::iter::range(Zero::zero(), n).map(|x| factorizer.try_factor(&x)).collect(),
 		}
 	}
 }
 
-impl<T> Factorizer<T>
+impl<T> TryFactor<T>
 for ListFactorizer<T>
  where T: Clone + Integer + MoreNumCast,
 {
@@ -247,23 +247,23 @@ for ListFactorizer<T>
 	///
 	/// May panic. (TODO: When?)
 	#[inline]
-	fn get_factor(&self, x: &T) -> T
+	fn try_factor(&self, x: &T) -> T
 	{
 		self.factors[x.to_usize().unwrap()].clone()
 	}
 }
 
-/// A `Factorizer` which doesn't take "no" for an answer.
+/// A `TryFactor` which doesn't take "no" for an answer.
 ///
 /// It first tests the number for primality with its `PrimeTester` object.
-/// If the number is not prime, the `Stubborn` will delegate to another `Factorizer`,
+/// If the number is not prime, the `Stubborn` will delegate to another `TryFactor`,
 ///  calling it repeatedly until a nontrivial factor is produced.
 ///
 /// This makes it possible to factorize using nondeterministic `Factorizers` which can sometimes
 ///  fail to produce a nontrivial factor for composite numbers.
 pub struct Stubborn<P,F,T>
  where P: PrimeTester<T>,
-       F: Factorizer<T>,
+       F: TryFactor<T>,
        T: Clone + Zero + One + Integer,
 {
 	prime_tester: P,
@@ -273,7 +273,7 @@ pub struct Stubborn<P,F,T>
 
 impl<P,F,T> Stubborn<P,F,T>
  where P: PrimeTester<T>,
-       F: Factorizer<T>,
+       F: TryFactor<T>,
        T: Clone + Zero + One + Integer,
 {
 	#[inline]
@@ -287,19 +287,19 @@ impl<P,F,T> Stubborn<P,F,T>
 	}
 }
 
-impl<P,F,T> Factorizer<T>
+impl<P,F,T> TryFactor<T>
 for Stubborn<P,F,T>
  where P: PrimeTester<T>,
-       F: Factorizer<T>,
+       F: TryFactor<T>,
        T: Clone + Zero + One + Integer,
        T: Debug,
 {
-	fn get_factor(&self, x: &T) -> T
+	fn try_factor(&self, x: &T) -> T
 	{
 		if self.prime_tester.is_composite(x) {
 			// We are certain that x is composite, so keep trying to factor until we succeed
 			loop {
-				let factor = self.factorizer.get_factor(x);
+				let factor = self.factorizer.try_factor(x);
 
 				if &factor != x { return factor; };
 			}
@@ -332,7 +332,7 @@ mod tests {
 	//  A simple test to factorize 242 as an arbitrary data type using an arbitrary factorizer.
 	fn test_242<T, U>(factorizer: U)
 	 where T: Clone + Debug + Integer + MoreNumCast,
-	       U: Factorizer<T>,
+	       U: TryFactor<T>,
 	{
 		// 242 = 2 * 11 * 11
 		let x_t: T = literal(242);
@@ -378,14 +378,14 @@ mod tests {
 	}
 
 	fn make_list<F,T>(factorizer: F, limit: T) -> ListFactorizer<T>
-	 where F: Factorizer<T>,
+	 where F: TryFactor<T>,
 	       T: Clone + Debug + Integer + MoreNumCast,
 	{
 		return ListFactorizer::compute_new(limit, &factorizer);
 	}
 
 	fn make_list_stubborn<F,T>(factorizer: F, limit: T) -> ListFactorizer<T>
-	 where F: Factorizer<T>,
+	 where F: TryFactor<T>,
 	       T: Clone + Debug + Integer + MoreNumCast,
 	{
 		let primes = PrimeSieve::new(limit.to_usize().unwrap());
@@ -402,8 +402,8 @@ mod tests {
 				let expected = make_list(TrialDivision, $limit);
 				let actual   = make_list_stubborn($factorizer, $limit);
 
-				// We can't call factorize(0), but the value of get_factor(0) is still specified
-				assert_eq!(expected.get_factor(&literal(0)), literal(0));
+				// We can't call factorize(0), but the value of try_factor(0) is still specified
+				assert_eq!(expected.try_factor(&literal(0)), literal(0));
 
 				// The elements of the two lists may differ, but the complete factorization
 				//  of each number must agree:
@@ -481,7 +481,7 @@ mod tests {
 	#[bench]
 	fn bench_ten_8_rough_trialdiv(b: &mut Bencher) {
 		b.iter(|| {
-			TrialDivision.get_factor(&TEN_8_ROUGH)
+			TrialDivision.try_factor(&TEN_8_ROUGH)
 		});
 	}
 
@@ -489,7 +489,7 @@ mod tests {
 	fn bench_ten_8_rough_pollard(b: &mut Bencher) {
 		let factorizer = Stubborn::new(MillerRabin, PollardBrent);
 		b.iter(|| {
-			factorizer.get_factor(&TEN_8_ROUGH)
+			factorizer.try_factor(&TEN_8_ROUGH)
 		});
 	}
 
@@ -498,7 +498,7 @@ mod tests {
 	fn bench_ten_8_rough_dixon(b: &mut Bencher) {
 		let factorizer = Stubborn::new(MillerRabin, Dixon::new(vec![2,3,5]));
 		b.iter(|| {
-			let f = factorizer.get_factor(&TEN_8_ROUGH);
+			let f = factorizer.try_factor(&TEN_8_ROUGH);
 			println!("rough {:?}", f);
 			f
 		});
@@ -508,7 +508,7 @@ mod tests {
 	fn bench_ten_8_square_dixon(b: &mut Bencher) {
 		let factorizer = Stubborn::new(MillerRabin, Dixon::new(vec![2,3,5]));
 		b.iter(|| {
-			let f = factorizer.get_factor(&TEN_8_SQUARE);
+			let f = factorizer.try_factor(&TEN_8_SQUARE);
 			println!("square {:?}", f);
 			f
 		});

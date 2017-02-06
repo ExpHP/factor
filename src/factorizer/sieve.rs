@@ -7,7 +7,7 @@
 // to those terms.
 
 use num::{Zero, One, Integer};
-use ::Factorizer;
+use ::TryFactor;
 use ::Factored;
 use util::MoreNumCast;
 
@@ -36,10 +36,10 @@ impl FactorSieve {
 	pub fn as_vec_mut(&mut self) -> &mut Vec<usize> { &mut self.sieve }
 }
 
-impl<T> Factorizer<T> for FactorSieve
+impl<T> TryFactor<T> for FactorSieve
  where T: Clone + Zero + One + Integer + MoreNumCast,
 {
-	fn get_factor(&self, x: &T) -> T
+	fn try_factor(&self, x: &T) -> T
 	{ T::from_usize(self.sieve[x.to_usize().unwrap()]).unwrap() }
 
 	fn factorize(&self, x: T) -> Factored<T>

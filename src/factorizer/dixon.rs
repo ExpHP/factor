@@ -17,7 +17,7 @@ use bit_set::BitSet;
 
 use factorize;
 use Factored;
-use Factorizer;
+use TryFactor;
 use util::{isqrt,gcd,MoreNumCast};
 
 pub struct Dixon<T>
@@ -41,7 +41,7 @@ impl<T> Dixon<T>
 	}
 }
 
-impl<T> Factorizer<T>
+impl<T> TryFactor<T>
 for Dixon<T>
  where T: Clone + Zero + One + Integer + Shr<usize, Output=T> + SampleRange + MoreNumCast,
 {
@@ -50,7 +50,7 @@ for Dixon<T>
 	///  Thus, the number it returns is also always prime.
 	///
 	/// The runtime scales linearly with the size of the smallest factor of `x`.
-	fn get_factor(&self, x: &T) -> T
+	fn try_factor(&self, x: &T) -> T
 	{
 		// Step 1: Collect congruences of the form a^2 = b (mod x), where b < x
 		//          and b is smooth (composed only of small primes).

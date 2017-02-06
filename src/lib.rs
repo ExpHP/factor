@@ -33,7 +33,7 @@ pub mod prelude;
 
 pub use primes::PrimeTester;
 pub use primes::PrimeSieve;
-pub use factorizer::Factorizer;
+pub use factorizer::TryFactor;
 //pub use factorizer::FermatFactorizer;
 //pub use factorizer::Dixon; // FIXME broken, has disabled tests
 pub use iter_ext::FactorExt;
@@ -43,9 +43,9 @@ pub use factored::Factored;
 
 // Type-Synonyms, for semantic purposes.
 // (NOTE: alas, the docstrings don't appear to take effect)
-/// A deterministic `Factorizer` that is guaranteed to work on any number, but may be fast.
+/// A deterministic `TryFactor` that is guaranteed to work on any number, but may be fast.
 pub use factorizer::TrialDivision as SafeFactorizer;
-/// The `Factorizer` used by the `factor::factorize` method.
+/// The `TryFactor` used by the `factor::factorize` method.
 pub use factorizer::TrialDivision as DefaultFactorizer;
 
 use util::literal;

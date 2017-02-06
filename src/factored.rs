@@ -36,7 +36,7 @@ use ::FactorExt;
 ///
 /// One caveat:  It is not feasible for `Factorization` to enforce that the prime
 ///  factors it is built from are actually prime.  This is the job of the
-///  `Factorizer` used to produce it!  The behavior of any mathematical method
+///  `TryFactor` used to produce it!  The behavior of any mathematical method
 ///  on a `Factorization` with a composite factor is **undefined**. (in the sense
 ///  of nonsensical results; not in the sense that the safety guidelines of Rust
 ///  may be violated)
