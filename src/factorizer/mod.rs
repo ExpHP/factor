@@ -45,6 +45,9 @@ pub use self::pollard::PollardBrentBigInt;
 pub trait TryFactor<T>
  where T: Clone + Zero + One + Integer
 {
+	// FIXME: I feel like this should perhaps be `try_split() -> Option<(T,T)>`
+	//        to be more clear as to why `None` is returned for primes
+	//        (which can be surprising)
 	/// Attempt to produce a nontrivial factor of `x`.
 	///
 	/// A factor is nontrivial if it is neither equal to 1 nor x.
@@ -60,18 +63,6 @@ pub trait TryFactor<T>
 	///   and `f != x`.  `f` is allowed to be composite.
 	///   The converse is not a guarantee.
 	fn try_factor(&self, x: &T) -> Option<T>;
-
-	// FIXME: Should be part of its own trait for deterministic factorizers
-	/// Produce the smallest prime factor of `x`.
-	///
-	/// * `first_prime(0) == Some(2)`.
-	/// * `first_prime(1) == None`.
-	/// * `first_prime(p) == Some(p)` for `p` prime. (this differs from `try_factor`)
-	fn first_prime(&self, x: &T) -> Option<T> {
-		if x == &T::zero() { return Some(T::one() + T::one()); } // XXX
-		if x == &T::one() { None }
-		else { Some(self.try_factor(x).unwrap_or(x.clone())) }
-	}
 }
 
 /// Provides the additional guarantee that `try_factor` always identifies composites.
@@ -87,6 +78,23 @@ pub trait SureFactor<T>: TryFactor<T>
 	/// special case and emit an error.
 	fn factorize(&self, x: T) -> Factored<T> where Self: Sized // FIXME why does this require Sized?
 	{ self::helper::recursive_factorize(self, x) }
+}
+
+/// Provides the additional guarantee that `try_factor` always identifies the smallest
+/// factor for composites. (there are no spurious `None`s)
+pub trait FirstFactor<T>: SureFactor<T>
+ where T: Clone + Zero + One + Integer
+{
+	/// Produce the smallest prime factor of `x`.
+	///
+	/// * `first_prime(0) == Some(2)`.
+	/// * `first_prime(1) == None`.
+	/// * `first_prime(p) == Some(p)` for `p` prime. (this differs from `try_factor`)
+	fn first_prime(&self, x: &T) -> Option<T> {
+		if x == &T::zero() { return Some(T::one() + T::one()); } // XXX
+		if x == &T::one() { None }
+		else { Some(self.try_factor(x).unwrap_or(x.clone())) }
+	}
 }
 
 pub mod helper {
@@ -127,7 +135,7 @@ pub mod helper {
 	/// This is an optimized implementation for Factorizers which always produce
 	///  the smallest nontrivial factor of any composite.
 	pub fn always_smallest_factorize<F,T>(factorizer: &F, x: T) -> Factored<T>
-	 where F: TryFactor<T>, T: Clone + Zero + One + Integer,
+	 where F: FirstFactor<T>, T: Clone + Zero + One + Integer,
 	{
 		debug_assert!(x >= T::zero());
 		if x == T::zero() { panic!("Zero has no factorization") }
@@ -215,6 +223,13 @@ for TrialDivision
 {
 	fn factorize(&self, x: T) -> Factored<T>
 	{ self::helper::always_smallest_factorize(self, x) }
+}
+
+impl<T> FirstFactor<T>
+for TrialDivision
+ where T: Clone + Zero + One + Integer + Shr<usize, Output=T> + MoreNumCast,
+{
+	// TODO: delegate try_factor to first_prime rather than other way around
 }
 
 // TODO
@@ -343,6 +358,14 @@ impl<P,F,T> SureFactor<T>
 for Stubborn<P,F,T>
  where P: PrimeTester<T>,
        F: TryFactor<T>,
+       T: Clone + Zero + One + Integer,
+       T: Debug,
+{ }
+
+impl<P,F,T> FirstFactor<T>
+for Stubborn<P,F,T>
+ where P: PrimeTester<T>,
+       F: FirstFactor<T>,
        T: Clone + Zero + One + Integer,
        T: Debug,
 { }

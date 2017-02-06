@@ -53,6 +53,12 @@ impl<T> SureFactor<T> for FactorSieve
 	{ ::factorizer::helper::always_smallest_factorize(self, x) }
 }
 
+impl<T> FirstFactor<T> for FactorSieve
+ where T: Clone + Zero + One + Integer + MoreNumCast,
+{
+	// TODO: delegate try_factor to first_prime rather than other way around
+}
+
 //------------------------------------------------------
 
 fn factor_sieve_simple(limit: usize) -> Vec<usize>
