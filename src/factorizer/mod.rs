@@ -26,17 +26,17 @@ use iter_ext::FactorExt;
 // (alas, re-exports don't appear to take docstrings)
 
 // /// A deterministic `Factorizer` that is guaranteed to work on any number, but may be fast.
-pub use TrialDivisionFactorizer as SafeFactorizer;
+pub use TrialDivision as SafeFactorizer;
 // /// The `Factorizer` used by the `factor::factorize` method.
-pub use TrialDivisionFactorizer as DefaultFactorizer;
+pub use TrialDivision as DefaultFactorizer;
 
 mod sieve;
 mod dixon;
 mod pollard;
 pub use self::sieve::FactorSieve;
-pub use self::dixon::DixonFactorizer;
-pub use self::pollard::PollardBrentFactorizer;
-pub use self::pollard::PollardBrentFactorizerBigInt;
+pub use self::dixon::Dixon;
+pub use self::pollard::PollardBrent;
+pub use self::pollard::PollardBrentBigInt;
 
 //// XXX: Would reduce some of the pain in keeping impl type bounds consistent, but would also require the
 ////      trait to be explicitly implemented for all applicable types, which arguably sucks just as much.
@@ -46,7 +46,7 @@ pub use self::pollard::PollardBrentFactorizerBigInt;
 
 // TODO: There should be a statically typed distinction for nondeterministic factorizers
 //       which can fail to produce factors.  Alternatively, the library could simply not
-//       publicly export any of these factorizers (exporting only reliable StubbornFactorizer
+//       publicly export any of these factorizers (exporting only reliable Stubborn
 //       wrappers instead).
 
 /// An interface for factorizing positive integers.
@@ -161,20 +161,20 @@ pub mod helper {
 /// Factors numbers using trial division.
 ///
 /// Trial division is one of the most inefficient, yet most easily understood methods for
-///  factorizing numbers.  `TrialDivisionFactorizer` tries dividing a number by successively
+///  factorizing numbers.  `TrialDivision` tries dividing a number by successively
 ///  larger numbers until it encounters one that leaves a remainder of zero.
 ///
 /// Despite its primitive nature, it can well outperform many of the more sophisticated methods
 ///  when factoring small numbers (TODO: of what magnitude?). However, it has trouble on numbers
 ///  with large prime factors.
-pub struct TrialDivisionFactorizer;
+pub struct TrialDivision;
 
 
 impl<T> Factorizer<T>
-for TrialDivisionFactorizer
+for TrialDivision
  where T: Clone + Zero + One + Integer + Shr<usize, Output=T> + MoreNumCast,
 {
-	/// Produce a single factor of `x`.  TrialDivisionFactorizer is deterministic,
+	/// Produce a single factor of `x`.  TrialDivision is deterministic,
 	///  and will always produce the smallest non-trivial factor of any composite number.
 	///  Thus, the number it returns is also always prime.
 	///
@@ -236,7 +236,7 @@ impl<T> ListFactorizer<T>
 {
 	/// Constructs a `ListFactorizer` containing factors for the numbers `0..n`, using the
 	///  provided `factorizer` to generate them.  Be sure to wrap any nondeterministic
-	///  factorizer in a `StubbornFactorizer` beforehand to ensure that only correct results
+	///  factorizer in a `Stubborn` beforehand to ensure that only correct results
 	///  get cached in the list.
 	pub fn compute_new(n: T, factorizer: &Factorizer<T>) -> Self {
 		ListFactorizer {
@@ -264,12 +264,12 @@ for ListFactorizer<T>
 /// A `Factorizer` which doesn't take "no" for an answer.
 ///
 /// It first tests the number for primality with its `PrimeTester` object.
-/// If the number is not prime, the `StubbornFactorizer` will delegate to another `Factorizer`,
+/// If the number is not prime, the `Stubborn` will delegate to another `Factorizer`,
 ///  calling it repeatedly until a nontrivial factor is produced.
 ///
 /// This makes it possible to factorize using nondeterministic `Factorizers` which can sometimes
 ///  fail to produce a nontrivial factor for composite numbers.
-pub struct StubbornFactorizer<P,F,T>
+pub struct Stubborn<P,F,T>
  where P: PrimeTester<T>,
        F: Factorizer<T>,
        T: Clone + Zero + One + Integer,
@@ -279,7 +279,7 @@ pub struct StubbornFactorizer<P,F,T>
 	phantom:      PhantomData<T>,
 }
 
-impl<P,F,T> StubbornFactorizer<P,F,T>
+impl<P,F,T> Stubborn<P,F,T>
  where P: PrimeTester<T>,
        F: Factorizer<T>,
        T: Clone + Zero + One + Integer,
@@ -287,7 +287,7 @@ impl<P,F,T> StubbornFactorizer<P,F,T>
 	#[inline]
 	pub fn new(prime_tester: P, factorizer: F) -> Self
 	{
-		StubbornFactorizer {
+		Stubborn {
 			prime_tester: prime_tester,
 			factorizer:   factorizer,
 			phantom:      PhantomData,
@@ -296,7 +296,7 @@ impl<P,F,T> StubbornFactorizer<P,F,T>
 }
 
 impl<P,F,T> Factorizer<T>
-for StubbornFactorizer<P,F,T>
+for Stubborn<P,F,T>
  where P: PrimeTester<T>,
        F: Factorizer<T>,
        T: Clone + Zero + One + Integer,
@@ -335,7 +335,7 @@ mod tests {
 	use util::literal;
 	use util::MoreNumCast;
 	use primes::PrimeSieve;
-	use primes::MillerRabinTester;
+	use primes::MillerRabin;
 
 	//  A simple test to factorize 242 as an arbitrary data type using an arbitrary factorizer.
 	fn test_242<T, U>(factorizer: U)
@@ -365,24 +365,24 @@ mod tests {
 	#[test]
 	fn test_mix_and_match() {
 		// differently sized integers
-		test_242::<u32,_>(TrialDivisionFactorizer);
-		test_242::<u64,_>(TrialDivisionFactorizer);
-		test_242::<usize,_>(TrialDivisionFactorizer);
+		test_242::<u32,_>(TrialDivision);
+		test_242::<u64,_>(TrialDivision);
+		test_242::<usize,_>(TrialDivision);
 
 		// a signed type
-		test_242::<isize,_>(TrialDivisionFactorizer);
+		test_242::<isize,_>(TrialDivision);
 
 		// my pain and suffering
-		test_242::<BigUint,_>(TrialDivisionFactorizer);
-		test_242::<BigInt,_>(TrialDivisionFactorizer);
+		test_242::<BigUint,_>(TrialDivision);
+		test_242::<BigInt,_>(TrialDivision);
 
-		// Non-deterministic factorizers: Test them using a StubbornFactorizer
+		// Non-deterministic factorizers: Test them using a Stubborn
 		let primes = PrimeSieve::new(256);
-		test_242::<u64,_>(StubbornFactorizer::new(primes.clone(), DixonFactorizer::new(vec![2,3,5])));
-		test_242::<i64,_>(StubbornFactorizer::new(primes.clone(), DixonFactorizer::new(vec![2,3,5])));
-		test_242::<u64,_>(StubbornFactorizer::new(primes.clone(), PollardBrentFactorizer));
-		test_242::<i64,_>(StubbornFactorizer::new(primes.clone(), PollardBrentFactorizer));
-		test_242::<BigInt,_>(StubbornFactorizer::new(primes.clone(), PollardBrentFactorizerBigInt));
+		test_242::<u64,_>(Stubborn::new(primes.clone(), Dixon::new(vec![2,3,5])));
+		test_242::<i64,_>(Stubborn::new(primes.clone(), Dixon::new(vec![2,3,5])));
+		test_242::<u64,_>(Stubborn::new(primes.clone(), PollardBrent));
+		test_242::<i64,_>(Stubborn::new(primes.clone(), PollardBrent));
+		test_242::<BigInt,_>(Stubborn::new(primes.clone(), PollardBrentBigInt));
 	}
 
 	fn make_list<F,T>(factorizer: F, limit: T) -> ListFactorizer<T>
@@ -397,17 +397,17 @@ mod tests {
 	       T: Clone + Debug + Integer + MoreNumCast,
 	{
 		let primes = PrimeSieve::new(limit.to_usize().unwrap());
-		let stubborn = StubbornFactorizer::new(primes, factorizer);
+		let stubborn = Stubborn::new(primes, factorizer);
 		return ListFactorizer::compute_new(limit, &stubborn);
 	}
 
 	// Builds a ListFactorizer up to some limit and verifies it against a list built
 	//  using trial division. The factorizer provided to the macro will be wrapped
-	//  in a StubbornFactorizer, so nondeterministic factorizers are OK.
+	//  in a Stubborn, so nondeterministic factorizers are OK.
 	macro_rules! test_list_stubborn (
 		($factorizer: expr, $limit: expr) => {
 			{
-				let expected = make_list(TrialDivisionFactorizer, $limit);
+				let expected = make_list(TrialDivision, $limit);
 				let actual   = make_list_stubborn($factorizer, $limit);
 
 				// We can't call factorize(0), but the value of get_factor(0) is still specified
@@ -424,17 +424,17 @@ mod tests {
 
 	/*
 	// FIXME Disabled test!!!
-	//  Reason:  DixonFactorizer is legit broken and I don't feel like fixing it.
-	//           I'm going to make DixonFactorizer private instead.
+	//  Reason:  Dixon is legit broken and I don't feel like fixing it.
+	//           I'm going to make Dixon private instead.
 	#[test]
 	fn test_list_dixon() {
-		test_list_stubborn!(DixonFactorizer::new(vec![2,3,5,7]), 100000u64);
+		test_list_stubborn!(Dixon::new(vec![2,3,5,7]), 100000u64);
 	}
 	*/
 
 	#[test]
 	fn test_list_pollard() {
-		test_list_stubborn!(PollardBrentFactorizer, 100000u64);
+		test_list_stubborn!(PollardBrent, 100000u64);
 	}
 
 	/*
@@ -443,7 +443,7 @@ mod tests {
 	#[bench]
 	fn bench_list_dixon(b: &mut Bencher) {
 		b.iter(||
-			make_list_stubborn(DixonFactorizer::new(vec![2,3,5]), 1000u64)
+			make_list_stubborn(Dixon::new(vec![2,3,5]), 1000u64)
 		);
 	}
 	*/
@@ -451,7 +451,7 @@ mod tests {
 	#[bench]
 	fn bench_list_trialdiv(b: &mut Bencher) {
 		b.iter(||
-			make_list(TrialDivisionFactorizer, 10000u64)
+			make_list(TrialDivision, 10000u64)
 		);
 	}
 
@@ -476,7 +476,7 @@ mod tests {
 	#[bench]
 	fn bench_list_pollard(b: &mut Bencher) {
 		b.iter(||
-			make_list_stubborn(PollardBrentFactorizer, 10000u64)
+			make_list_stubborn(PollardBrent, 10000u64)
 		);
 	}
 
@@ -489,13 +489,13 @@ mod tests {
 	#[bench]
 	fn bench_ten_8_rough_trialdiv(b: &mut Bencher) {
 		b.iter(|| {
-			TrialDivisionFactorizer.get_factor(&TEN_8_ROUGH)
+			TrialDivision.get_factor(&TEN_8_ROUGH)
 		});
 	}
 
 	#[bench]
 	fn bench_ten_8_rough_pollard(b: &mut Bencher) {
-		let factorizer = StubbornFactorizer::new(MillerRabinTester, PollardBrentFactorizer);
+		let factorizer = Stubborn::new(MillerRabin, PollardBrent);
 		b.iter(|| {
 			factorizer.get_factor(&TEN_8_ROUGH)
 		});
@@ -504,7 +504,7 @@ mod tests {
 	/*
 	#[bench]
 	fn bench_ten_8_rough_dixon(b: &mut Bencher) {
-		let factorizer = StubbornFactorizer::new(MillerRabinTester, DixonFactorizer::new(vec![2,3,5]));
+		let factorizer = Stubborn::new(MillerRabin, Dixon::new(vec![2,3,5]));
 		b.iter(|| {
 			let f = factorizer.get_factor(&TEN_8_ROUGH);
 			println!("rough {:?}", f);
@@ -514,7 +514,7 @@ mod tests {
 
 	#[bench]
 	fn bench_ten_8_square_dixon(b: &mut Bencher) {
-		let factorizer = StubbornFactorizer::new(MillerRabinTester, DixonFactorizer::new(vec![2,3,5]));
+		let factorizer = Stubborn::new(MillerRabin, Dixon::new(vec![2,3,5]));
 		b.iter(|| {
 			let f = factorizer.get_factor(&TEN_8_SQUARE);
 			println!("square {:?}", f);

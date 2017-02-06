@@ -117,12 +117,12 @@ fn compute_sieve_of_eratosthenes(limit: usize) -> Vec<bool>
 ///
 /// Currently, `factor` does not provide any method to select the witnesses. It uses
 ///  a fixed set of witnesses which work deterministically for all u64.
-pub struct MillerRabinTester;
+pub struct MillerRabin;
 
 // TODO: implement non-deterministic miller-rabin
 // TODO: implement different choices of witnesses for deterministic miller-rabin (and
 //         have them validate their input against the max number for which they work)
-impl MillerRabinTester
+impl MillerRabin
 {
 	/// Produces some set of numbers in the half-open interval `[0,x)` to use
 	///  as potential witnesses for the Miller Rabin Test.  Some of the numbers
@@ -148,7 +148,7 @@ impl MillerRabinTester
 
 
 impl<T> PrimeTester<T>
-for MillerRabinTester
+for MillerRabin
  where T: Eq + Clone + Integer + Shr<usize, Output=T> + Debug + MoreNumCast,
 {
 	fn is_prime(&self, x: &T) -> bool
@@ -218,8 +218,8 @@ fn test_miller_vs_sieve()
 	let expected = PrimeSieve::new(limit).sieve;
 
 	for k in (0usize..limit) {
-		if MillerRabinTester.is_prime(&k) != expected[k] {
-			panic!("MillerRabinTester returned '{:?}' for {:?}", !expected[k], k);
+		if MillerRabin.is_prime(&k) != expected[k] {
+			panic!("MillerRabin returned '{:?}' for {:?}", !expected[k], k);
 		}
 	}
 }
@@ -233,7 +233,7 @@ fn test_miller_mersenne()
 		let one: BigUint = literal(1);
 		let two: BigUint = literal(2);
 		let mersenne: BigUint = num::pow(two,p) - one;
-		assert!(MillerRabinTester.is_prime(&mersenne));
+		assert!(MillerRabin.is_prime(&mersenne));
 	}
 }
 
@@ -245,6 +245,6 @@ fn bench_mersenne(b: &mut Bencher)
 	let mersenne: BigUint = num::pow(two,107) - one;
 
 	b.iter(|| {
-		MillerRabinTester.is_prime(&mersenne)
+		MillerRabin.is_prime(&mersenne)
 	})
 }

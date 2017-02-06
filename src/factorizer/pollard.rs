@@ -28,17 +28,17 @@ use util::gcd;
 use util::mod_pow;
 use util::MoreNumCast;
 
-// PollardBrentFactorizerBigInt is a hack because BigInt does not
+// PollardBrentBigInt is a hack because BigInt does not
 //  satisfy SampleRange (it has its own trait which takes by ref >_>)
 
-pub struct PollardBrentFactorizer;
-pub struct PollardBrentFactorizerBigInt;
+pub struct PollardBrent;
+pub struct PollardBrentBigInt;
 
 impl<T> Factorizer<T>
-for PollardBrentFactorizer
+for PollardBrent
  where T: Clone + Zero + One + Integer + Shr<usize, Output=T> + SampleRange + MoreNumCast,
 {
-	/// Produce a single factor of `x`.  PollardBrentFactorizer is nondeterministic,
+	/// Produce a single factor of `x`.  PollardBrent is nondeterministic,
 	/// and may sometimes fail to produce a non-trivial factor for composite `x`.
 	fn get_factor(&self, x: &T) -> T {
 		let mut rng = weak_rng();
@@ -47,7 +47,7 @@ for PollardBrentFactorizer
 }
 
 impl Factorizer<BigInt>
-for PollardBrentFactorizerBigInt
+for PollardBrentBigInt
 {
 	fn get_factor(&self, x: &BigInt) -> BigInt {
 		let mut rng = weak_rng();
@@ -55,7 +55,7 @@ for PollardBrentFactorizerBigInt
 	}
 }
 
-/// Produce a single factor of `x`.  PollardBrentFactorizer is nondeterministic,
+/// Produce a single factor of `x`.  PollardBrent is nondeterministic,
 /// and may sometimes fail to produce a non-trivial factor for composite `x`.
 fn do_pollard<'c,T,F>(x: &'c T, mut rand_range: F) -> T
  where T: Clone + Zero + One + Integer + Shr<usize, Output=T> + MoreNumCast,

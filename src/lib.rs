@@ -33,19 +33,19 @@ pub mod prelude;
 
 pub use primes::PrimeTester;
 pub use primes::PrimeSieve;
-pub use primes::MillerRabinTester;
+pub use primes::MillerRabin;
 pub use factorizer::Factorizer;
-pub use factorizer::TrialDivisionFactorizer;
-pub use factorizer::StubbornFactorizer;
+pub use factorizer::TrialDivision;
+pub use factorizer::Stubborn;
 pub use factorizer::FactorSieve;
 //pub use factorizer::FermatFactorizer;
 //pub use factorizer::GeneralFactorizer;
 pub use factorizer::SafeFactorizer;
 pub use factorizer::DefaultFactorizer;
 pub use factorizer::ListFactorizer;
-//pub use factorizer::DixonFactorizer; // FIXME broken, has disabled tests
-pub use factorizer::PollardBrentFactorizer;
-pub use factorizer::PollardBrentFactorizerBigInt; // FIXME total hack
+//pub use factorizer::Dixon; // FIXME broken, has disabled tests
+pub use factorizer::PollardBrent;
+pub use factorizer::PollardBrentBigInt; // FIXME total hack
 pub use iter_ext::FactorExt;
 pub use util::isqrt;
 pub use util::gcd;

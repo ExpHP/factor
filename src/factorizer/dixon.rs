@@ -20,7 +20,7 @@ use Factored;
 use Factorizer;
 use util::{isqrt,gcd,MoreNumCast};
 
-pub struct DixonFactorizer<T>
+pub struct Dixon<T>
  where T: Clone + Zero + One + Integer
 {
 	primes:       Vec<T>,
@@ -28,12 +28,12 @@ pub struct DixonFactorizer<T>
 	max_attempts: usize,
 }
 
-impl<T> DixonFactorizer<T>
+impl<T> Dixon<T>
  where T: Clone + Zero + One + Integer
 {
 	pub fn new(primes: Vec<T>) -> Self
 	{
-		DixonFactorizer {
+		Dixon {
 			primes:       primes,
 			extra_count:  3,
 			max_attempts: 100,
@@ -42,10 +42,10 @@ impl<T> DixonFactorizer<T>
 }
 
 impl<T> Factorizer<T>
-for DixonFactorizer<T>
+for Dixon<T>
  where T: Clone + Zero + One + Integer + Shr<usize, Output=T> + SampleRange + MoreNumCast,
 {
-	/// Produce a single factor of `x`.  TrialDivisionFactorizer is deterministic,
+	/// Produce a single factor of `x`.  TrialDivision is deterministic,
 	///  and will always produce the smallest non-trivial factor of any composite number.
 	///  Thus, the number it returns is also always prime.
 	///
@@ -185,25 +185,25 @@ fn factorize_limited_test() {
 // Private utility structs used in the "bit matrix to ref" algorithm, to separate
 //  the underlying data representation from the general algorithm.
 #[derive(Eq,PartialEq,Clone,Debug)]
-struct DixonBitvec {
+struct Bitvec {
 	elements: BitSet, // represents the power of each prime modulo 2
 	indices:  BitSet, // indicates which rows have been xor'ed to make this row
 }
 
 #[derive(Eq,PartialEq,Clone,Debug)]
-struct DixonBitmatrix {
-	rows:  Vec<DixonBitvec>,
+struct Bitmatrix {
+	rows:  Vec<Bitvec>,
 	width: usize,
 }
 
 
-impl DixonBitvec
+impl Bitvec
 {
-	// Mostly for creating DixonBitvecs from literal vecs in tests
+	// Mostly for creating Bitvecs from literal vecs in tests
 	#[cfg(test)]
 	#[inline]
-	fn from_vecs(elems: Vec<usize>, ids: Vec<usize>) -> DixonBitvec {
-		DixonBitvec {
+	fn from_vecs(elems: Vec<usize>, ids: Vec<usize>) -> Bitvec {
+		Bitvec {
 			elements: elems.into_iter().collect(),
 			indices:  ids.into_iter().collect(),
 		}
@@ -221,7 +221,7 @@ impl DixonBitvec
 
 }
 
-impl DixonBitmatrix
+impl Bitmatrix
 {
 	// Matrix dimensions
 	#[inline]
@@ -252,17 +252,17 @@ impl DixonBitmatrix
 	}
 
 	#[inline]
-	fn into_rows(self) -> Vec<DixonBitvec> {
+	fn into_rows(self) -> Vec<Bitvec> {
 		self.rows
 	}
 }
 
 
 // Produce matrix from initial input
-fn bit_matrix_from_factorizations<T>(factorizations: &Vec<Factored<T>>, primes: &Vec<T>) -> DixonBitmatrix
+fn bit_matrix_from_factorizations<T>(factorizations: &Vec<Factored<T>>, primes: &Vec<T>) -> Bitmatrix
  where T: Clone + Zero + One + Integer
 {
-	let rows: Vec<DixonBitvec> = factorizations.iter().enumerate().map(|(row_index,fact)| {
+	let rows: Vec<Bitvec> = factorizations.iter().enumerate().map(|(row_index,fact)| {
 
 		// set elements equal to powers in factorization, mod 2
 		let elements: BitSet = (0usize..primes.len()).filter(|i| fact.get(&primes[*i]) % 2 == 1).collect();
@@ -272,20 +272,20 @@ fn bit_matrix_from_factorizations<T>(factorizations: &Vec<Factored<T>>, primes: 
 		indices.insert(row_index);
 
 		// Construct the row
-		DixonBitvec {
+		Bitvec {
 			elements: elements,
 			indices:  indices,
 		}
 	}).collect();
 
-	DixonBitmatrix {
+	Bitmatrix {
 		rows: rows,
 		width: primes.len(),
 	}
 }
 
 // Manipulate bit matrix into row echelon form
-fn bit_matrix_to_ref(matrix: &mut DixonBitmatrix)
+fn bit_matrix_to_ref(matrix: &mut Bitmatrix)
 {
 	let mut target_row = 0usize;
 
@@ -314,19 +314,19 @@ fn bit_matrix_to_ref(matrix: &mut DixonBitmatrix)
 }
 
 #[cfg(test)]
-fn gen_test_matrix() -> DixonBitmatrix {
+fn gen_test_matrix() -> Bitmatrix {
 	// Test a specific matrix
 	// [1, 0, 0, 0] {0}       [1, 0, 0, 0] {0}
 	// [1, 1, 1, 0] {1}  ref  [0, 1, 1, 0] {0,1}
 	// [1, 1, 1, 0] {2} ----> [0, 0, 1, 1] {1,3}
 	// [1, 1, 0, 1] {3}       [0, 0, 0, 0] {1,2} \ interchangeable
 	// [1, 0, 0, 0] {4}       [0, 0, 0, 0] {0,4} /      rows
-	DixonBitmatrix { rows: vec![
-		DixonBitvec::from_vecs(vec![0],     vec![0]),
-		DixonBitvec::from_vecs(vec![0,1,2], vec![1]),
-		DixonBitvec::from_vecs(vec![0,1,2], vec![2]),
-		DixonBitvec::from_vecs(vec![0,1,3], vec![3]),
-		DixonBitvec::from_vecs(vec![0],     vec![4]),
+	Bitmatrix { rows: vec![
+		Bitvec::from_vecs(vec![0],     vec![0]),
+		Bitvec::from_vecs(vec![0,1,2], vec![1]),
+		Bitvec::from_vecs(vec![0,1,2], vec![2]),
+		Bitvec::from_vecs(vec![0,1,3], vec![3]),
+		Bitvec::from_vecs(vec![0],     vec![4]),
 	], width: 4}
 }
 
@@ -339,12 +339,12 @@ fn test_row_swap() {
 	assert_eq!(actual, original);
 
 	actual.swap_rows(1,3);
-	let expected = DixonBitmatrix { rows: vec![
-		DixonBitvec::from_vecs(vec![0],     vec![0]),
-		DixonBitvec::from_vecs(vec![0,1,3], vec![3]), // changed
-		DixonBitvec::from_vecs(vec![0,1,2], vec![2]),
-		DixonBitvec::from_vecs(vec![0,1,2], vec![1]), // changed
-		DixonBitvec::from_vecs(vec![0],     vec![4]),
+	let expected = Bitmatrix { rows: vec![
+		Bitvec::from_vecs(vec![0],     vec![0]),
+		Bitvec::from_vecs(vec![0,1,3], vec![3]), // changed
+		Bitvec::from_vecs(vec![0,1,2], vec![2]),
+		Bitvec::from_vecs(vec![0,1,2], vec![1]), // changed
+		Bitvec::from_vecs(vec![0],     vec![4]),
 	], width: 4};
 	assert_eq!(actual, expected);
 }
@@ -355,12 +355,12 @@ fn test_row_xor() {
 	let mut actual = original.clone();
 
 	actual.xor_update_row(1,3);
-	let expected = DixonBitmatrix { rows: vec![
-		DixonBitvec::from_vecs(vec![0],     vec![0]),
-		DixonBitvec::from_vecs(vec![0,1,2], vec![1]),
-		DixonBitvec::from_vecs(vec![0,1,2], vec![2]),
-		DixonBitvec::from_vecs(vec![2,3],   vec![1,3]), // changed
-		DixonBitvec::from_vecs(vec![0],     vec![4]),
+	let expected = Bitmatrix { rows: vec![
+		Bitvec::from_vecs(vec![0],     vec![0]),
+		Bitvec::from_vecs(vec![0,1,2], vec![1]),
+		Bitvec::from_vecs(vec![0,1,2], vec![2]),
+		Bitvec::from_vecs(vec![2,3],   vec![1,3]), // changed
+		Bitvec::from_vecs(vec![0],     vec![4]),
 	], width: 4};
 	assert_eq!(actual, expected);
 
@@ -374,12 +374,12 @@ fn test_bit_marix_to_ref() {
 
 	bit_matrix_to_ref(&mut actual);
 
-	let expected = DixonBitmatrix { rows: vec![
-		DixonBitvec::from_vecs(vec![0],   vec![0]),
-		DixonBitvec::from_vecs(vec![1,2], vec![0,1]),
-		DixonBitvec::from_vecs(vec![2,3], vec![1,3]),
-		DixonBitvec::from_vecs(vec![],    vec![1,2]),
-		DixonBitvec::from_vecs(vec![],    vec![0,4]),
+	let expected = Bitmatrix { rows: vec![
+		Bitvec::from_vecs(vec![0],   vec![0]),
+		Bitvec::from_vecs(vec![1,2], vec![0,1]),
+		Bitvec::from_vecs(vec![2,3], vec![1,3]),
+		Bitvec::from_vecs(vec![],    vec![1,2]),
+		Bitvec::from_vecs(vec![],    vec![0,4]),
 	], width: 4};
 
 	// This test is a bit strict as there can be many valid REF forms.
