@@ -30,10 +30,9 @@ impl FactorSieve
 		FactorSieve { sieve: factor_sieve_simple(limit.to_usize().unwrap()) }
 	}
 }
+
 impl FactorSieve {
 	pub fn into_vec(self) -> Vec<usize> { self.sieve }
-	pub fn as_vec(&self) -> &Vec<usize> { &self.sieve }
-	pub fn as_vec_mut(&mut self) -> &mut Vec<usize> { &mut self.sieve }
 }
 
 impl<T> TryFactor<T> for FactorSieve

@@ -35,12 +35,6 @@ pub use self::pollard::PollardBrentBigInt;
 //// Master trait of traits needed to implement Factored<T>
 //trait Factorable: Clone + num::Integer { }
 
-
-// TODO: There should be a statically typed distinction for nondeterministic factorizers
-//       which can fail to produce factors.  Alternatively, the library could simply not
-//       publicly export any of these factorizers (exporting only reliable Stubborn
-//       wrappers instead).
-
 /// An interface for factorizing positive integers.
 pub trait TryFactor<T>
  where T: Clone + Zero + One + Integer
@@ -267,7 +261,8 @@ impl<T> ListFactorizer<T>
 	pub fn compute_new(n: T, factorizer: &SureFactor<T>) -> Self {
 		ListFactorizer {
 			//factors: num::iter::range(Zero::zero(), n).map(|x| factorizer.try_factor(&x).unwrap()).collect(),
-			factors: num::iter::range(T::zero(), n.clone()).map(|x| factorizer.try_factor(&x).unwrap_or(x.clone())).take(n.to_usize().unwrap()).collect(), // XXX HACK: _or(one())
+			factors: num::iter::range(T::zero(), n.clone())
+				.map(|x| factorizer.try_factor(&x).unwrap_or(x.clone())).collect(), // XXX HACK: _or()
 		}
 	}
 }
