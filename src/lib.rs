@@ -33,6 +33,7 @@ pub mod prelude;
 
 pub use primes::PrimeTester;
 pub use primes::PrimeSieve;
+pub use factorizer::FactorSieve;
 //pub use factorizer::FermatFactorizer;
 //pub use factorizer::Dixon; // FIXME broken, has disabled tests
 pub use util::isqrt;
