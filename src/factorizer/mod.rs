@@ -236,59 +236,6 @@ for TrialDivision
 // where T: Clone + Zero + One + Integer
 //;
 
-// FIXME this shouldn't exist except maybe for testing purposes.
-//       FactorSieve is the way to go.
-/// Factors numbers by using results cached from another `SureFactor`.
-///
-/// Stores factors produced by another `SureFactor` for quick lookup. Only a single non-trivial
-///  factor is stored for each composite number, from which the full decomposition can be
-///  gathered recursively.
-#[derive(Clone, Debug)]
-pub struct ListFactorizer<T>
-{
-	factors: Vec<T>,
-}
-
-// TODO: Not sure how to do static dispatch here under the new orphan-checking rules.
-//       Perhaps fix this up if/when unboxed abstract types make an appearance
-impl<T> ListFactorizer<T>
- where T: Clone + Integer + MoreNumCast,
-{
-	/// Constructs a `ListFactorizer` containing factors for the numbers `0..n`, using the
-	///  provided `factorizer` to generate them.  Be sure to wrap any nondeterministic
-	///  factorizer in a `Stubborn` beforehand to ensure that only correct results
-	///  get cached in the list.
-	pub fn compute_new(n: T, factorizer: &SureFactor<T>) -> Self {
-		ListFactorizer {
-			//factors: num::iter::range(Zero::zero(), n).map(|x| factorizer.try_factor(&x).unwrap()).collect(),
-			factors: num::iter::range(T::zero(), n.clone())
-				.map(|x| factorizer.try_factor(&x).unwrap_or(x.clone())).collect(), // XXX HACK: _or()
-		}
-	}
-}
-
-impl<T> TryFactor<T>
-for ListFactorizer<T>
- where T: Clone + Integer + MoreNumCast,
-{
-	/// Produces the factor stored for `x`.
-	///
-	/// # Panics
-	///
-	/// May panic. (TODO: When?)
-	#[inline]
-	fn try_factor(&self, x: &T) -> Option<T>
-	{
-		let f = self.factors[x.to_usize().unwrap()].clone();
-		if &f == x { None } else { Some(f) }
-	}
-}
-
-impl<T> SureFactor<T>
-for ListFactorizer<T>
- where T: Clone + Integer + MoreNumCast,
-{ }
-
 /// A `SureFactor` wrapper around a `TryFactor`.
 ///
 /// It first tests the number for primality with its `PrimeTester` object.
@@ -382,6 +329,68 @@ mod tests {
 	use util::MoreNumCast;
 	use primes::PrimeSieve;
 	use primes::MillerRabin;
+
+	use self::list_factorizer::ListFactorizer;
+	mod list_factorizer {
+		use ::num;
+		use ::num::Integer;
+		use util::MoreNumCast;
+		use factorizer::TryFactor;
+		use factorizer::SureFactor;
+
+		// FIXME this shouldn't exist except maybe for testing purposes.
+		//       FactorSieve is the way to go.
+		/// Factors numbers by using results cached from another `SureFactor`.
+		///
+		/// Stores factors produced by another `SureFactor` for quick lookup. Only a single non-trivial
+		///  factor is stored for each composite number, from which the full decomposition can be
+		///  gathered recursively.
+		#[derive(Clone, Debug)]
+		pub struct ListFactorizer<T>
+		{
+			factors: Vec<T>,
+		}
+
+		// TODO: Not sure how to do static dispatch here under the new orphan-checking rules.
+		//       Perhaps fix this up if/when unboxed abstract types make an appearance
+		impl<T> ListFactorizer<T>
+		 where T: Clone + Integer + MoreNumCast,
+		{
+			/// Constructs a `ListFactorizer` containing factors for the numbers `0..n`, using the
+			///  provided `factorizer` to generate them.  Be sure to wrap any nondeterministic
+			///  factorizer in a `Stubborn` beforehand to ensure that only correct results
+			///  get cached in the list.
+			pub fn compute_new(n: T, factorizer: &SureFactor<T>) -> Self {
+				ListFactorizer {
+					//factors: num::iter::range(Zero::zero(), n).map(|x| factorizer.try_factor(&x).unwrap()).collect(),
+					factors: num::iter::range(T::zero(), n.clone())
+						.map(|x| factorizer.try_factor(&x).unwrap_or(x.clone())).collect(), // XXX HACK: _or()
+				}
+			}
+		}
+
+		impl<T> TryFactor<T>
+		for ListFactorizer<T>
+		 where T: Clone + Integer + MoreNumCast,
+		{
+			/// Produces the factor stored for `x`.
+			///
+			/// # Panics
+			///
+			/// May panic. (TODO: When?)
+			#[inline]
+			fn try_factor(&self, x: &T) -> Option<T>
+			{
+				let f = self.factors[x.to_usize().unwrap()].clone();
+				if &f == x { None } else { Some(f) }
+			}
+		}
+
+		impl<T> SureFactor<T>
+		for ListFactorizer<T>
+		 where T: Clone + Integer + MoreNumCast,
+		{ }
+	}
 
 	//  A simple test to factorize 242 as an arbitrary data type using an arbitrary factorizer.
 	fn test_242<T, U>(factorizer: U)
