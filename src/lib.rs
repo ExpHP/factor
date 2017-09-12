@@ -11,7 +11,7 @@
 // TODO: Make documentation not be "currently under construction." :P
 
 #![feature(test)]
-#![feature(step_by)]
+#![feature(iterator_step_by)]
 
 #![allow(unused_imports)]
 #![allow(non_snake_case)]
