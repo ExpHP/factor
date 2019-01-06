@@ -14,11 +14,10 @@ use std::cmp::min;
 use num;
 use num::{Zero, One, Integer};
 use num::{FromPrimitive, ToPrimitive};
-use rand::Rng;
-use rand::weak_rng;
-use num::BigInt;
-use num_bigint::RandBigInt;
-use rand::distributions::range::SampleRange;
+use rand::{Rng, rngs::SmallRng};
+use num::bigint::{BigInt, RandBigInt};
+use rand::distributions::uniform::SampleUniform;
+use rand::FromEntropy;
 
 use factorize;
 use Factored;
@@ -29,19 +28,19 @@ use util::mod_pow;
 use util::MoreNumCast;
 
 // PollardBrentBigInt is a hack because BigInt does not
-//  satisfy SampleRange (it has its own trait which takes by ref >_>)
+//  satisfy SampleUniform (it has its own trait which takes by ref >_>)
 
 pub struct PollardBrent;
 pub struct PollardBrentBigInt;
 
 impl<T> TryFactor<T>
 for PollardBrent
- where T: Clone + Zero + One + Integer + Shr<usize, Output=T> + SampleRange + MoreNumCast,
+ where T: Clone + Zero + One + Integer + Shr<usize, Output=T> + SampleUniform + MoreNumCast,
 {
 	/// Produce a single factor of `x`.  PollardBrent is nondeterministic,
 	/// and may sometimes fail to produce a non-trivial factor for composite `x`.
 	fn try_factor(&self, x: &T) -> Option<T> {
-		let mut rng = weak_rng();
+		let mut rng = SmallRng::from_entropy();
 		do_pollard(x, |a,b| rng.gen_range(a.clone(), b.clone()))
 	}
 }
@@ -50,7 +49,7 @@ impl TryFactor<BigInt>
 for PollardBrentBigInt
 {
 	fn try_factor(&self, x: &BigInt) -> Option<BigInt> {
-		let mut rng = weak_rng();
+		let mut rng = SmallRng::from_entropy();
 		do_pollard(x, |a,b| rng.gen_bigint_range(a, b))
 	}
 }

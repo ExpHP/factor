@@ -13,10 +13,13 @@ use num::bigint::{ToBigUint,BigUint};
 use num::{Zero,One,Integer};
 use num::{ToPrimitive,FromPrimitive};
 
+use rand::FromEntropy;
+
 /// Services more types than NumCast does, such as BigInt.
 pub trait MoreNumCast: ToPrimitive + FromPrimitive { }
 impl<T: ToPrimitive + FromPrimitive> MoreNumCast for T { }
 
+#[cfg(test)]
 use test::Bencher;
 
 /// Computes the greatest common divisor of two numbers using Euclid's method.
@@ -36,9 +39,8 @@ pub fn gcd<T>(a: T,  b: T) -> T
 
 #[bench]
 fn bench_gcd(b: &mut Bencher) {
-	use rand::weak_rng;
 	use rand::Rng;
-	let mut rng = weak_rng();
+	let mut rng = ::rand::rngs::SmallRng::from_entropy();
 	b.iter(|| {
 		let a = rng.gen_range(100000u32,1000000u32);
 		let b = rng.gen_range(100000u32,1000000u32);
@@ -150,9 +152,17 @@ fn bench_safe_bigint(b: &mut Bencher) {
 
 #[bench]
 fn bench_safe_massive_bigint(b: &mut Bencher) {
-	use rand::XorShiftRng;
+	use rand_xorshift::XorShiftRng;
+	use rand::SeedableRng;
 	use num::bigint::RandBigInt;
-	let mut r = XorShiftRng::new_unseeded();
+
+	let mut r = XorShiftRng::from_seed([
+		// what 'new_unseeded' used to do before it was unceremoniously removed
+		0x19, 0x3a, 0x67, 0x54,
+		0xa8, 0xa7, 0xd4, 0x69,
+		0x97, 0x83, 0x0e, 0x05,
+		0x11, 0x3b, 0xa7, 0xbb,
+	]);
 	b.iter(|| {
 		(0usize..100).map(|_| {
 			isqrt_safe::<BigUint>(r.gen_biguint(100usize))
@@ -163,11 +173,11 @@ fn bench_safe_massive_bigint(b: &mut Bencher) {
 #[test]
 fn test_isqrt_consistency()
 {
-	(0usize..1000).map(|x| {
+	for x in 0usize..1000 {
 		let bigX = x.to_biguint().unwrap();
 		assert_eq!(isqrt_fast(x),            Some(isqrt_safe(x)));
 		assert_eq!(isqrt_fast(bigX.clone()), Some(isqrt_safe(bigX.clone())));
-	}).collect::<Vec<_>>();
+	}
 }
 
 #[cfg(test)]

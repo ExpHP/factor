@@ -12,6 +12,7 @@ use std::fmt::Debug;
 use num;
 use num::{Zero,One,Integer};
 use num::BigUint;
+#[cfg(test)]
 use test::Bencher;
 
 use util::literal;

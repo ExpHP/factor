@@ -10,9 +10,9 @@ use std::ops::{Shr,Rem};
 use std::mem::swap;
 
 use num::{Zero, One, Integer};
-use rand::Rng;
-use rand::weak_rng;
-use rand::distributions::range::SampleRange;
+use rand::{Rng, rngs::SmallRng};
+use rand::FromEntropy;
+use rand::distributions::uniform::SampleUniform;
 use bit_set::BitSet;
 
 use factorize;
@@ -43,7 +43,7 @@ impl<T> Dixon<T>
 
 impl<T> TryFactor<T>
 for Dixon<T>
- where T: Clone + Zero + One + Integer + Shr<usize, Output=T> + SampleRange + MoreNumCast,
+ where T: Clone + Zero + One + Integer + Shr<usize, Output=T> + SampleUniform + MoreNumCast,
 {
 	// FIXME docs
 	fn try_factor(&self, x: &T) -> Option<T>
@@ -56,11 +56,12 @@ for Dixon<T>
 		let mut a_values: Vec<T> = Vec::new();
 		let mut b_factorizations: Vec<Factored<T>> = Vec::new();
 
+		let mut rng = SmallRng::from_entropy();
 		'a: for _ in (0usize..a_count) {
 			for _ in (0usize..self.max_attempts) {
 
 				// a random number such that a < x and a*a > x.
-				let a = weak_rng().gen_range(a_min.clone(), x.clone());
+				let a = rng.gen_range(a_min.clone(), x.clone());
 				let b = a.clone() * a.clone() % x.clone();
 
 				// there are cases where x may divide directly into a*a, in which
@@ -143,7 +144,7 @@ for Dixon<T>
 // Utility function that only returns a factorization if it can be constructed
 //  *exclusively* from the given primes.
 fn factorize_limited<T>(x: T, primes: &Vec<T>) -> Option<Factored<T>>
- where T: Clone + Zero + One + Integer + SampleRange
+ where T: Clone + Zero + One + Integer + SampleUniform
 {
 	assert!(!x.is_zero());
 

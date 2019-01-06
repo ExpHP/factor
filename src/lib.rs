@@ -10,8 +10,7 @@
 
 // TODO: Make documentation not be "currently under construction." :P
 
-#![feature(test)]
-#![feature(iterator_step_by)]
+#![cfg_attr(test, feature(test))]
 
 #![allow(unused_imports)]
 #![allow(non_snake_case)]
@@ -19,10 +18,12 @@
 #![deny(unused_must_use)]
 
 extern crate num;
-extern crate num_bigint;
+#[cfg(test)]
 extern crate test;
 extern crate rand;
 extern crate bit_set;
+#[cfg(test)]
+extern crate rand_xorshift;
 
 mod primes;
 mod factorizer;
