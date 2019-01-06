@@ -330,6 +330,15 @@ where
     }
 }
 
+impl<X> std::iter::Product for Factored<X>
+where
+    X: Ord + Clone,
+{
+    fn product<I: Iterator<Item=Factored<X>>>(iter: I) -> Self {
+        iter.fold(Default::default(), |acc, x| acc * x)
+    }
+}
+
 //------------------------------------
 
 pub type Iter<'a, T> = ::std::collections::btree_map::Iter<'a, T, usize>;
