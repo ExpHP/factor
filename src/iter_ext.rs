@@ -25,7 +25,7 @@ use crate::util::mod_pow;
 ///
 /// A diagnostic for violations of these conditions (with the exception
 ///  of non-compositeness) may be provided in debug builds.
-pub trait FactorExt<X: Ord>: Iterator<Item = (X, usize)> {
+pub trait FactorExt<X: Ord>: IntoIterator<Item = (X, usize)> {
     /// Recover an integer from its prime decomposition.
     ///
     /// # Example:
@@ -41,7 +41,7 @@ pub trait FactorExt<X: Ord>: Iterator<Item = (X, usize)> {
         X: Clone + One,
         Self: Sized,
     {
-        self.fold(X::one(), |acc, (k, v)| acc * num::pow(k.clone(), v.clone()))
+        self.into_iter().fold(X::one(), |acc, (k, v)| acc * num::pow(k.clone(), v.clone()))
     }
 
     /// Compute the total number of positive integers which evenly divide
@@ -62,7 +62,7 @@ pub trait FactorExt<X: Ord>: Iterator<Item = (X, usize)> {
     {
         // product( n[i]+1 );  we're counting the possible ways to select a power
         //                      from 0 to n[i] (inclusive) for each prime p[i]
-        self.fold(X::one(), |acc, (_, v)| {
+        self.into_iter().fold(X::one(), |acc, (_, v)| {
             acc * FromPrimitive::from_usize(v.clone() + 1).unwrap()
         })
     }
@@ -84,7 +84,7 @@ pub trait FactorExt<X: Ord>: Iterator<Item = (X, usize)> {
         Self: Sized,
     {
         // A geometric series for each factor
-        self.fold(X::one(), |mut acc, (k, v)| {
+        self.into_iter().fold(X::one(), |mut acc, (k, v)| {
             let numer = (num::pow(k.clone(), v.clone() + 1) - One::one());
             let denom = (k.clone() - One::one());
             acc * numer / denom
@@ -108,7 +108,7 @@ pub trait FactorExt<X: Ord>: Iterator<Item = (X, usize)> {
         Self: Sized,
     {
         // product( (p[i] - 1) * pow(p[i], n[i]-1) )
-        self.fold(X::one(), |acc, (k, v)| {
+        self.into_iter().fold(X::one(), |acc, (k, v)| {
             acc * num::pow(k.clone(), v.clone() - 1) * (k.clone() - One::one())
         })
     }
@@ -134,7 +134,7 @@ pub trait FactorExt<X: Ord>: Iterator<Item = (X, usize)> {
         X: Clone + One + Integer,
         Self: Sized,
     {
-        self.fold(X::one(), |mut acc, (k, v)| {
+        self.into_iter().fold(X::one(), |mut acc, (k, v)| {
             acc = acc * mod_pow(k.clone(), v.clone(), modulus.clone());
             acc = acc % modulus.clone();
             acc
@@ -142,4 +142,4 @@ pub trait FactorExt<X: Ord>: Iterator<Item = (X, usize)> {
     }
 }
 
-impl<I, X: Ord> FactorExt<X> for I where I: Iterator<Item = (X, usize)> {}
+impl<I, X: Ord> FactorExt<X> for I where I: IntoIterator<Item = (X, usize)> {}
