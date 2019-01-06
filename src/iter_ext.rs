@@ -84,7 +84,7 @@ pub trait FactorExt<X: Ord>: IntoIterator<Item = (X, usize)> {
         Self: Sized,
     {
         // A geometric series for each factor
-        self.into_iter().fold(X::one(), |mut acc, (k, v)| {
+        self.into_iter().fold(X::one(), |acc, (k, v)| {
             let numer = (num::pow(k.clone(), v.clone() + 1) - One::one());
             let denom = (k.clone() - One::one());
             acc * numer / denom
@@ -134,10 +134,8 @@ pub trait FactorExt<X: Ord>: IntoIterator<Item = (X, usize)> {
         X: Clone + One + Integer,
         Self: Sized,
     {
-        self.into_iter().fold(X::one(), |mut acc, (k, v)| {
-            acc = acc * mod_pow(k.clone(), v.clone(), modulus.clone());
-            acc = acc % modulus.clone();
-            acc
+        self.into_iter().fold(X::one(), |acc, (k, v)| {
+            acc * mod_pow(k.clone(), v.clone(), modulus.clone()) % modulus.clone()
         })
     }
 }
