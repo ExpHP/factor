@@ -246,14 +246,14 @@ where
     /// Iterate over unique prime factors.
     ///
     /// Item type is `&X`.
-    pub fn primes(&self) -> Primes<X> {
+    pub fn primes(&self) -> Primes<'_, X> {
         self.powers.keys()
     }
 
     /// Iterate over `(prime, power)` pairs.
     ///
     /// Item type is `(&X, usize)`.
-    pub fn iter(&self) -> Iter<X> {
+    pub fn iter(&self) -> Iter<'_, X> {
         self.powers.iter()
     }
 

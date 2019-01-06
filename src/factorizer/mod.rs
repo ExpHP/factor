@@ -393,7 +393,7 @@ mod tests {
             ///  provided `factorizer` to generate them.  Be sure to wrap any nondeterministic
             ///  factorizer in a `Stubborn` beforehand to ensure that only correct results
             ///  get cached in the list.
-            pub fn compute_new(n: T, factorizer: &SureFactor<T>) -> Self {
+            pub fn compute_new(n: T, factorizer: &dyn SureFactor<T>) -> Self {
                 ListFactorizer {
                     //factors: num::iter::range(Zero::zero(), n).map(|x| factorizer.try_factor(&x).unwrap()).collect(),
                     factors: num::iter::range(T::zero(), n.clone())

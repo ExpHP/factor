@@ -2,6 +2,7 @@
 name = "factor"
 version = "0.1.1"
 authors = ["Michael Lamparski <me@this.isnt.really.my.email.org>"]
+edition = "2018"
 
 [profile.release]
 debug = true

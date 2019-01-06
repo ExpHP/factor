@@ -16,13 +16,8 @@
 #![allow(unused_parens)]
 #![deny(unused_must_use)]
 
-extern crate num;
 #[cfg(test)]
 extern crate test;
-extern crate rand;
-extern crate bit_set;
-#[cfg(test)]
-extern crate rand_xorshift;
 
 mod primes;
 mod factorizer;
