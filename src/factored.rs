@@ -12,8 +12,7 @@ use std::cmp::{min,max};
 use std::collections::BTreeMap;
 
 use num;
-use num::{One,FromPrimitive};
-use num::Num;
+use num::{One, Num, Integer, FromPrimitive};
 
 use crate::FactorExt;
 
@@ -155,6 +154,24 @@ where
         X: Clone + One + Num,
     {
         self.iter().map(clone2).totient()
+    }
+
+    /// Compute the value modulo `m`.
+    ///
+    /// # Example:
+    ///
+    /// ```
+    /// use factor::prelude::*;
+    ///
+    /// let f: factor::Factored<_> = (1..=20u64).map(factor::factorize).product();
+    /// assert_eq!(f.product_mod(&1297), 278);
+    /// ```
+    pub fn product_mod(self, modulus: &X) -> X
+    where
+        X: Clone + One + Integer,
+        Self: Sized,
+    {
+        self.iter().map(clone2).factor_product_mod(modulus)
     }
 }
 
