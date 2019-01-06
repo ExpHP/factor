@@ -6,8 +6,6 @@
 // This file may not be copied, modified, or distributed except according
 // to those terms.
 
-// FIXME This file has a disabled test!
-
 use std::ops::{Shr,Rem};
 use std::fmt::Debug;
 use std::marker::PhantomData;
@@ -545,10 +543,15 @@ mod tests {
         b.iter(|| make_list_stubborn(PollardBrent, 10000u64));
     }
 
-    // A "rough" number (no small factors) around 10^8
+    /// A "rough" number (no small factors) around 10^8
     const TEN_8_ROUGH: u64 = 99400891; // 9967 * 9973
 
-    // A rough square around 10^8  (some algorithms have extra trouble with repeated factors)
+    /// A rough square around 10^8.
+    ///
+    /// Some algorithms have extra trouble with repeated factors.  For instance,
+    /// a factorizer using Dixon's method may need to be wrapped in `Stubborn<F>`
+    /// before it can reliably handle this input.
+    #[allow(unused)] // the Dixon factorizer has been removed for now...
     const TEN_8_SQUARE: u64 = 99341089; // 9967 * 9967
 
     #[bench]

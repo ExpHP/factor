@@ -20,10 +20,10 @@
 extern crate test;
 
 mod primes;
-mod factorizer;
 mod iter_ext;
 mod util;
 mod factored;
+pub mod factorizer;
 pub mod prelude;
 
 pub use crate::primes::PrimeTester;
