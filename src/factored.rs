@@ -360,25 +360,25 @@ where
     }
 }
 
-impl<X> Mul<Factored<X>> for Factored<X>
+impl<X, B> Mul<B> for Factored<X>
 where
-    X: Ord + Clone,
+    Self: MulAssign<B>,
 {
     type Output = Self;
 
-    fn mul(mut self, other: Self) -> Self {
+    fn mul(mut self, other: B) -> Self {
         self *= other;
         self
     }
 }
 
-impl<X> Div<Factored<X>> for Factored<X>
+impl<X, B> Div<B> for Factored<X>
 where
-    X: Ord + Clone,
+    Self: DivAssign<B>
 {
     type Output = Self;
 
-    fn div(mut self, other: Self) -> Self {
+    fn div(mut self, other: B) -> Self {
         self /= other;
         self
     }
@@ -389,10 +389,7 @@ where
     X: Ord + Clone,
 {
     fn mul_assign(&mut self, other: Self) {
-        for (k, v) in other.powers.into_iter() {
-            let current = self.get(&k);
-            self.set(k.clone(), current + v);
-        }
+        *self *= &other;
     }
 }
 
@@ -401,7 +398,28 @@ where
     X: Ord + Clone,
 {
     fn div_assign(&mut self, other: Self) {
-        self.checked_div_assign(other).expect("divisor does not evenly divide into self!");
+        *self /= &other;
+    }
+}
+
+impl<'b, X> MulAssign<&'b Factored<X>> for Factored<X>
+where
+    X: Ord + Clone,
+{
+    fn mul_assign(&mut self, other: &'b Factored<X>) {
+        for (k, v) in other.powers.iter() {
+            let current = self.get(&k);
+            self.set(k.clone(), current + v);
+        }
+    }
+}
+impl<'b, X> DivAssign<&'b Factored<X>> for Factored<X>
+where
+    X: Ord + Clone,
+{
+    fn div_assign(&mut self, other: &'b Factored<X>) {
+        self.checked_div_assign(other.iter().map(clone2))
+            .expect("divisor does not evenly divide into self!");
     }
 }
 
