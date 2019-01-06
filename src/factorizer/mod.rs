@@ -23,10 +23,8 @@ use crate::primes::PrimeTester;
 use crate::iter_ext::FactorExt;
 
 mod sieve;
-mod dixon;
 mod pollard;
 pub use self::sieve::FactorSieve;
-pub use self::dixon::Dixon;
 pub use self::pollard::PollardBrent;
 pub use self::pollard::PollardBrentBigInt;
 
@@ -468,8 +466,6 @@ mod tests {
 
         // Non-deterministic factorizers: Test them using a Stubborn
         let primes = PrimeSieve::new(256);
-        test_242::<u64, _>(Stubborn::new(primes.clone(), Dixon::new(vec![2, 3, 5])));
-        test_242::<i64, _>(Stubborn::new(primes.clone(), Dixon::new(vec![2, 3, 5])));
         test_242::<u64, _>(Stubborn::new(primes.clone(), PollardBrent));
         test_242::<i64, _>(Stubborn::new(primes.clone(), PollardBrent));
         test_242::<BigInt, _>(Stubborn::new(primes.clone(), PollardBrentBigInt));
@@ -514,31 +510,10 @@ mod tests {
 		}
 	);
 
-    /*
-    // FIXME Disabled test!!!
-    //  Reason:  Dixon is legit broken and I don't feel like fixing it.
-    //           I'm going to make Dixon private instead.
-    #[test]
-    fn test_list_dixon() {
-        test_list_stubborn!(Dixon::new(vec![2,3,5,7]), 100000u64);
-    }
-    */
-
     #[test]
     fn test_list_pollard() {
         test_list_stubborn!(PollardBrent, 100000u64);
     }
-
-    /*
-    // TODO: Make Dixon stop panicking so we can bench it.
-    //       (also make it not suck)
-    #[bench]
-    fn bench_list_dixon(b: &mut Bencher) {
-        b.iter(||
-            make_list_stubborn(Dixon::new(vec![2,3,5]), 1000u64)
-        );
-    }
-    */
 
     #[bench]
     fn bench_list_trialdiv(b: &mut Bencher) {
@@ -586,26 +561,4 @@ mod tests {
         let factorizer = Stubborn::new(MillerRabin, PollardBrent);
         b.iter(|| factorizer.try_factor(&TEN_8_ROUGH));
     }
-
-    /*
-    #[bench]
-    fn bench_ten_8_rough_dixon(b: &mut Bencher) {
-        let factorizer = Stubborn::new(MillerRabin, Dixon::new(vec![2,3,5]));
-        b.iter(|| {
-            let f = factorizer.try_factor(&TEN_8_ROUGH);
-            println!("rough {:?}", f);
-            f
-        });
-    }
-
-    #[bench]
-    fn bench_ten_8_square_dixon(b: &mut Bencher) {
-        let factorizer = Stubborn::new(MillerRabin, Dixon::new(vec![2,3,5]));
-        b.iter(|| {
-            let f = factorizer.try_factor(&TEN_8_SQUARE);
-            println!("square {:?}", f);
-            f
-        });
-    }
-    */
 }
