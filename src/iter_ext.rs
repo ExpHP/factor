@@ -24,7 +24,7 @@ use num::Num;
 ///
 /// A diagnostic for violations of these conditions (with the exception
 ///  of non-compositeness) may be provided in debug builds.
-pub trait FactorExt<X>: Iterator<Item = (X, usize)> {
+pub trait FactorExt<X: Ord>: Iterator<Item = (X, usize)> {
     /// Recover an integer from its prime decomposition.
     ///
     /// # Example:
@@ -133,4 +133,4 @@ pub trait FactorExt<X>: Iterator<Item = (X, usize)> {
     // fn iter_divisors(&self) -> Iterator<K>
 }
 
-impl<I, X> FactorExt<X> for I where I: Iterator<Item = (X, usize)> {}
+impl<I, X: Ord> FactorExt<X> for I where I: Iterator<Item = (X, usize)> {}
