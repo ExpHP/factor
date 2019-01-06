@@ -11,7 +11,6 @@
 // TODO: Make documentation not be "currently under construction." :P
 
 #![cfg_attr(test, feature(test))]
-
 #![allow(unused_imports)]
 #![allow(non_snake_case)]
 #![allow(unused_parens)]
@@ -59,9 +58,10 @@ use num::{Zero,One,Integer};
 
 /// Factors a number using `DefaultFactorizer`.
 pub fn factorize<T>(x: T) -> Factored<T>
- where T: Clone + Zero + One + Integer + Shr<usize, Output=T> + MoreNumCast
+where
+    T: Clone + Zero + One + Integer + Shr<usize, Output = T> + MoreNumCast,
 {
-	DefaultFactorizer.factorize(x)
+    DefaultFactorizer.factorize(x)
 }
 
 /// Collects all primes up to a limit (inclusive)
@@ -75,33 +75,37 @@ pub fn factorize<T>(x: T) -> Factored<T>
 /// assert_eq!(v, vec![2, 3, 5, 7, 11, 13, 17]);
 /// ```
 pub fn primes_upto<Out>(limit: usize) -> Out
- where Out: FromIterator<u64>
+where
+    Out: FromIterator<u64>,
 {
-	use std::iter::{empty,once};
+    use std::iter::{empty,once};
 
-	if limit < 2 {
-		return empty().collect();
-	}
+    if limit < 2 {
+        return empty().collect();
+    }
 
-	let stop = limit + 1;
-	let sieve = primes::PrimeSieve::new(stop);
+    let stop = limit + 1;
+    let sieve = primes::PrimeSieve::new(stop);
 
-	let odd_primes = (3..stop).step_by(2)
-		.filter(|&i| sieve.is_prime(&i))
-		.map(|i| i as u64);
+    let odd_primes = (3..stop)
+        .step_by(2)
+        .filter(|&i| sieve.is_prime(&i))
+        .map(|i| i as u64);
 
-	once(2).chain(odd_primes).collect()
+    once(2).chain(odd_primes).collect()
 }
 
 #[test]
 fn test_primes_upto() {
-	// a func to help rust infer the output type
-	fn get_em(limit:usize) -> Vec<u64> { primes_upto(limit) }
+    // a func to help rust infer the output type
+    fn get_em(limit: usize) -> Vec<u64> {
+        primes_upto(limit)
+    }
 
-	assert_eq!(get_em(0), vec![]);
-	assert_eq!(get_em(1), vec![]);
-	assert_eq!(get_em(2), vec![2]);
-	assert_eq!(get_em(3), vec![2, 3]); // first odd prime
-	assert_eq!(get_em(4), vec![2, 3]); // even between odd primes
-	assert_eq!(get_em(17), vec![2, 3, 5, 7, 11, 13, 17]); // arbitrary odd prime
+    assert_eq!(get_em(0), vec![]);
+    assert_eq!(get_em(1), vec![]);
+    assert_eq!(get_em(2), vec![2]);
+    assert_eq!(get_em(3), vec![2, 3]); // first odd prime
+    assert_eq!(get_em(4), vec![2, 3]); // even between odd primes
+    assert_eq!(get_em(17), vec![2, 3, 5, 7, 11, 13, 17]); // arbitrary odd prime
 }

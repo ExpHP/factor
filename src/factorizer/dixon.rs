@@ -21,366 +21,381 @@ use prelude::*;
 use util::{isqrt,gcd,MoreNumCast};
 
 pub struct Dixon<T>
- where T: Clone + Zero + One + Integer
+where
+    T: Clone + Zero + One + Integer,
 {
-	primes:       Vec<T>,
-	extra_count:  usize,
-	max_attempts: usize,
+    primes: Vec<T>,
+    extra_count: usize,
+    max_attempts: usize,
 }
 
 impl<T> Dixon<T>
- where T: Clone + Zero + One + Integer
+where
+    T: Clone + Zero + One + Integer,
 {
-	pub fn new(primes: Vec<T>) -> Self
-	{
-		Dixon {
-			primes:       primes,
-			extra_count:  3,
-			max_attempts: 100,
-		}
-	}
+    pub fn new(primes: Vec<T>) -> Self {
+        Dixon {
+            primes: primes,
+            extra_count: 3,
+            max_attempts: 100,
+        }
+    }
 }
 
-impl<T> TryFactor<T>
-for Dixon<T>
- where T: Clone + Zero + One + Integer + Shr<usize, Output=T> + SampleUniform + MoreNumCast,
+impl<T> TryFactor<T> for Dixon<T>
+where
+    T: Clone + Zero + One + Integer + Shr<usize, Output = T> + SampleUniform + MoreNumCast,
 {
-	// FIXME docs
-	fn try_factor(&self, x: &T) -> Option<T>
-	{
-		// Step 1: Collect congruences of the form a^2 = b (mod x), where b < x
-		//          and b is smooth (composed only of small primes).
-		let a_min = isqrt(x.clone()); // XXX: ceil? (ensure a^2 > x)
+    // FIXME docs
+    fn try_factor(&self, x: &T) -> Option<T> {
+        // Step 1: Collect congruences of the form a^2 = b (mod x), where b < x
+        //          and b is smooth (composed only of small primes).
+        let a_min = isqrt(x.clone()); // XXX: ceil? (ensure a^2 > x)
 
-		let a_count = self.primes.len() + self.extra_count;
-		let mut a_values: Vec<T> = Vec::new();
-		let mut b_factorizations: Vec<Factored<T>> = Vec::new();
+        let a_count = self.primes.len() + self.extra_count;
+        let mut a_values: Vec<T> = Vec::new();
+        let mut b_factorizations: Vec<Factored<T>> = Vec::new();
 
-		let mut rng = SmallRng::from_entropy();
-		'a: for _ in (0usize..a_count) {
-			for _ in (0usize..self.max_attempts) {
+        let mut rng = SmallRng::from_entropy();
+        'a: for _ in (0usize..a_count) {
+            for _ in (0usize..self.max_attempts) {
+                // a random number such that a < x and a*a > x.
+                let a = rng.gen_range(a_min.clone(), x.clone());
+                let b = a.clone() * a.clone() % x.clone();
 
-				// a random number such that a < x and a*a > x.
-				let a = rng.gen_range(a_min.clone(), x.clone());
-				let b = a.clone() * a.clone() % x.clone();
+                // there are cases where x may divide directly into a*a, in which
+                //  case b = 0.  In this case, gcd(a,x) must be a nontrivial
+                //  factor (easy proof), and we can bail with an early result.
+                if b.is_zero() {
+                    let candidate = gcd(a.clone(), x.clone());
 
-				// there are cases where x may divide directly into a*a, in which
-				//  case b = 0.  In this case, gcd(a,x) must be a nontrivial
-				//  factor (easy proof), and we can bail with an early result.
-				if b.is_zero() {
-					let candidate = gcd(a.clone(), x.clone());
+                    // Just to be sure...
+                    assert!(candidate != One::one());
+                    assert!(candidate != x.clone());
+                    return Some(candidate);
+                }
 
-					// Just to be sure...
-					assert!(candidate != One::one());
-					assert!(candidate != x.clone());
-					return Some(candidate);
-				}
+                // Try to factorize b using only small primes
+                let b_factorization = factorize_limited(b, &self.primes);
 
-				// Try to factorize b using only small primes
-				let b_factorization = factorize_limited(b, &self.primes);
+                if b_factorization.is_some() {
+                    // Record it and reset the attempt counter
+                    a_values.push(a);
+                    b_factorizations.push(b_factorization.unwrap());
+                    continue 'a;
+                }
+            }
+            panic!(
+                "Encountered max attempts to find an equivalence ({})",
+                self.max_attempts
+            );
+        }
 
-				if b_factorization.is_some() {
-					// Record it and reset the attempt counter
-					a_values.push(a);
-					b_factorizations.push(b_factorization.unwrap());
-					continue 'a;
-				}
-			}
-			panic!("Encountered max attempts to find an equivalence ({})", self.max_attempts);
-		}
+        assert_eq!(a_values.len(), a_count);
+        assert_eq!(b_factorizations.len(), a_count);
 
-		assert_eq!(a_values.len(), a_count);
-		assert_eq!(b_factorizations.len(), a_count);
+        // Step 2: Find products of b's which are square.
+        // NOTE: not currently a big fan of how this is accomplished. (using linear algebra, etc)
+        //       This problem is isomorphic to a rather simple problem in combinatorial
+        //       game theory (given a set of impartial games with known nimbers, find
+        //       subsets with nimsum 0), and the solution here feels unintuitive and
+        //       convoluted in comparison.
+        //       (it also generates much fewer results... but perhaps many of the additional
+        //        sums generated by the CGT solution are not useful here)
 
-		// Step 2: Find products of b's which are square.
-		// NOTE: not currently a big fan of how this is accomplished. (using linear algebra, etc)
-		//       This problem is isomorphic to a rather simple problem in combinatorial
-		//       game theory (given a set of impartial games with known nimbers, find
-		//       subsets with nimsum 0), and the solution here feels unintuitive and
-		//       convoluted in comparison.
-		//       (it also generates much fewer results... but perhaps many of the additional
-		//        sums generated by the CGT solution are not useful here)
+        // Use a bit array to represent each b's factorization mod 2
+        let mut bitmatrix = bit_matrix_from_factorizations(&b_factorizations, &self.primes);
 
-		// Use a bit array to represent each b's factorization mod 2
-		let mut bitmatrix = bit_matrix_from_factorizations(&b_factorizations, &self.primes);
+        // Put in row echelon form
+        bit_matrix_to_ref(&mut bitmatrix);
 
-		// Put in row echelon form
-		bit_matrix_to_ref(&mut bitmatrix);
+        // Each row full of zeros in the matrix represents a set of b values that multiply
+        //  together to form a square.
+        for matrix_row in bitmatrix.into_rows().into_iter() {
+            if matrix_row.is_all_zero() {
+                let mut a_prod: T = One::one();
+                let mut b_prod_factors: Factored<T> = One::one();
 
-		// Each row full of zeros in the matrix represents a set of b values that multiply
-		//  together to form a square.
-		for matrix_row in bitmatrix.into_rows().into_iter() {
+                for index in matrix_row.into_index_set().iter() {
+                    a_prod = a_prod * a_values[index].clone();
+                    b_prod_factors = b_prod_factors * b_factorizations[index].clone();
+                }
 
-			if matrix_row.is_all_zero() {
+                // we now have a congruence of squares (mod x) between a_prod^2 and b_prod
+                let b_prodsqrt_factors = b_prod_factors.sqrt().unwrap();
+                let b_prodsqrt = b_prodsqrt_factors.product();
 
-				let mut a_prod: T = One::one();
-				let mut b_prod_factors: Factored<T> = One::one();
+                // a - sqrt(b) has a high chance of sharing a nontrivial factor in common with x
+                let candidate = gcd(a_prod - b_prodsqrt, x.clone());
 
-				for index in matrix_row.into_index_set().iter() {
-					a_prod = a_prod * a_values[index].clone();
-					b_prod_factors = b_prod_factors * b_factorizations[index].clone();
-				}
+                if candidate != One::one() && &candidate != x {
+                    return Some(candidate);
+                }
+            }
+        }
 
-				// we now have a congruence of squares (mod x) between a_prod^2 and b_prod
-				let b_prodsqrt_factors = b_prod_factors.sqrt().unwrap();
-				let b_prodsqrt = b_prodsqrt_factors.product();
-
-				// a - sqrt(b) has a high chance of sharing a nontrivial factor in common with x
-				let candidate = gcd(a_prod - b_prodsqrt,  x.clone());
-
-				if candidate != One::one() && &candidate != x {
-					return Some(candidate);
-				}
-			}
-		}
-
-		// x *looks* like a prime, but we cannot truly tell...
-		None
-	}
+        // x *looks* like a prime, but we cannot truly tell...
+        None
+    }
 }
-
-
 
 // Utility function that only returns a factorization if it can be constructed
 //  *exclusively* from the given primes.
 fn factorize_limited<T>(x: T, primes: &Vec<T>) -> Option<Factored<T>>
- where T: Clone + Zero + One + Integer + SampleUniform
+where
+    T: Clone + Zero + One + Integer + SampleUniform,
 {
-	assert!(!x.is_zero());
+    assert!(!x.is_zero());
 
-	let mut f: Factored<T> = One::one();
-	let mut c = x;
-	for p in primes.iter() {
+    let mut f: Factored<T> = One::one();
+    let mut c = x;
+    for p in primes.iter() {
+        let mut count = 0usize;
+        while c.is_multiple_of(p) {
+            c = c / p.clone();
+            count += 1;
+        }
 
-		let mut count = 0usize;
-		while c.is_multiple_of(p) {
-			c = c / p.clone();
-			count += 1;
-		}
+        f.set(p.clone(), count);
+    }
 
-		f.set(p.clone(), count);
-	}
-
-	// Only report complete factorizations
-	if c == One::one() {
-		Some(f)
-	} else {
-		None
-	}
+    // Only report complete factorizations
+    if c == One::one() {
+        Some(f)
+    } else {
+        None
+    }
 }
 
 #[test]
 fn factorize_limited_test() {
-	let primes = vec![2usize, 5, 7];
-	assert_eq!(factorize_limited(1, &primes), Some(factorize(1usize)));
-	assert_eq!(factorize_limited(2450, &primes), Some(factorize(2450usize)));
-	assert_eq!(factorize_limited(22, &primes), None);   // 11 not in prime list
-	assert_eq!(factorize_limited(12, &primes), None);   // 3 not in prime list
+    let primes = vec![2usize, 5, 7];
+    assert_eq!(factorize_limited(1, &primes), Some(factorize(1usize)));
+    assert_eq!(factorize_limited(2450, &primes), Some(factorize(2450usize)));
+    assert_eq!(factorize_limited(22, &primes), None); // 11 not in prime list
+    assert_eq!(factorize_limited(12, &primes), None); // 3 not in prime list
 }
 
 //-------------------------------------------
 // Private utility structs used in the "bit matrix to ref" algorithm, to separate
 //  the underlying data representation from the general algorithm.
-#[derive(Eq,PartialEq,Clone,Debug)]
+#[derive(Eq, PartialEq, Clone, Debug)]
 struct Bitvec {
-	elements: BitSet, // represents the power of each prime modulo 2
-	indices:  BitSet, // indicates which rows have been xor'ed to make this row
+    elements: BitSet, // represents the power of each prime modulo 2
+    indices: BitSet,  // indicates which rows have been xor'ed to make this row
 }
 
-#[derive(Eq,PartialEq,Clone,Debug)]
+#[derive(Eq, PartialEq, Clone, Debug)]
 struct Bitmatrix {
-	rows:  Vec<Bitvec>,
-	width: usize,
+    rows: Vec<Bitvec>,
+    width: usize,
 }
 
+impl Bitvec {
+    // Mostly for creating Bitvecs from literal vecs in tests
+    #[cfg(test)]
+    #[inline]
+    fn from_vecs(elems: Vec<usize>, ids: Vec<usize>) -> Bitvec {
+        Bitvec {
+            elements: elems.into_iter().collect(),
+            indices: ids.into_iter().collect(),
+        }
+    }
 
-impl Bitvec
-{
-	// Mostly for creating Bitvecs from literal vecs in tests
-	#[cfg(test)]
-	#[inline]
-	fn from_vecs(elems: Vec<usize>, ids: Vec<usize>) -> Bitvec {
-		Bitvec {
-			elements: elems.into_iter().collect(),
-			indices:  ids.into_iter().collect(),
-		}
-	}
+    #[inline]
+    fn is_all_zero(&self) -> bool {
+        self.elements.is_empty()
+    }
 
-	#[inline]
-	fn is_all_zero(&self) -> bool {
-		self.elements.is_empty()
-	}
-
-	#[inline]
-	fn into_index_set(self) -> BitSet {
-		self.indices
-	}
-
+    #[inline]
+    fn into_index_set(self) -> BitSet {
+        self.indices
+    }
 }
 
-impl Bitmatrix
-{
-	// Matrix dimensions
-	#[inline]
-	fn nrows(&self) -> usize { self.rows.len() }
-	#[inline]
-	fn ncols(&self) -> usize { self.width }
+impl Bitmatrix {
+    // Matrix dimensions
+    #[inline]
+    fn nrows(&self) -> usize {
+        self.rows.len()
+    }
+    #[inline]
+    fn ncols(&self) -> usize {
+        self.width
+    }
 
-	// Index
-	#[inline]
-	fn get_elem(&self, row: usize, col: usize) -> bool {
-		self.rows[row].elements.contains(&col)
-	}
+    // Index
+    #[inline]
+    fn get_elem(&self, row: usize, col: usize) -> bool {
+        self.rows[row].elements.contains(&col)
+    }
 
-	#[inline]
-	fn swap_rows(&mut self, i: usize, j: usize) {
-		let temp = self.rows[i].clone();
-		self.rows[i] = self.rows[j].clone();
-		self.rows[j] = temp;
-	}
+    #[inline]
+    fn swap_rows(&mut self, i: usize, j: usize) {
+        let temp = self.rows[i].clone();
+        self.rows[i] = self.rows[j].clone();
+        self.rows[j] = temp;
+    }
 
-	// Computes an XOR of rows src and dest, overwriting dest.
-	#[inline]
-	fn xor_update_row(&mut self, src: usize, dest: usize) {
-		let elems = self.rows[src].elements.clone();
-		let inds  = self.rows[src].indices.clone();
-		self.rows[dest].elements.symmetric_difference_with(&elems);
-		self.rows[dest].indices.symmetric_difference_with(&inds);
-	}
+    // Computes an XOR of rows src and dest, overwriting dest.
+    #[inline]
+    fn xor_update_row(&mut self, src: usize, dest: usize) {
+        let elems = self.rows[src].elements.clone();
+        let inds = self.rows[src].indices.clone();
+        self.rows[dest].elements.symmetric_difference_with(&elems);
+        self.rows[dest].indices.symmetric_difference_with(&inds);
+    }
 
-	#[inline]
-	fn into_rows(self) -> Vec<Bitvec> {
-		self.rows
-	}
+    #[inline]
+    fn into_rows(self) -> Vec<Bitvec> {
+        self.rows
+    }
 }
-
 
 // Produce matrix from initial input
-fn bit_matrix_from_factorizations<T>(factorizations: &Vec<Factored<T>>, primes: &Vec<T>) -> Bitmatrix
- where T: Clone + Zero + One + Integer
+fn bit_matrix_from_factorizations<T>(
+    factorizations: &Vec<Factored<T>>,
+    primes: &Vec<T>,
+) -> Bitmatrix
+where
+    T: Clone + Zero + One + Integer,
 {
-	let rows: Vec<Bitvec> = factorizations.iter().enumerate().map(|(row_index,fact)| {
+    let rows: Vec<Bitvec> = factorizations
+        .iter()
+        .enumerate()
+        .map(|(row_index, fact)| {
+            // set elements equal to powers in factorization, mod 2
+            let elements: BitSet = (0usize..primes.len())
+                .filter(|i| fact.get(&primes[*i]) % 2 == 1)
+                .collect();
 
-		// set elements equal to powers in factorization, mod 2
-		let elements: BitSet = (0usize..primes.len()).filter(|i| fact.get(&primes[*i]) % 2 == 1).collect();
+            // indices initially contains just the index for this row
+            let mut indices = BitSet::new();
+            indices.insert(row_index);
 
-		// indices initially contains just the index for this row
-		let mut indices = BitSet::new();
-		indices.insert(row_index);
+            // Construct the row
+            Bitvec {
+                elements: elements,
+                indices: indices,
+            }
+        })
+        .collect();
 
-		// Construct the row
-		Bitvec {
-			elements: elements,
-			indices:  indices,
-		}
-	}).collect();
-
-	Bitmatrix {
-		rows: rows,
-		width: primes.len(),
-	}
+    Bitmatrix {
+        rows: rows,
+        width: primes.len(),
+    }
 }
 
 // Manipulate bit matrix into row echelon form
-fn bit_matrix_to_ref(matrix: &mut Bitmatrix)
-{
-	let mut target_row = 0usize;
+fn bit_matrix_to_ref(matrix: &mut Bitmatrix) {
+    let mut target_row = 0usize;
 
-	for col in (0usize..matrix.ncols()) {
+    for col in (0usize..matrix.ncols()) {
+        // Look for a leading 1 in this column
+        for source_row in (target_row..matrix.nrows()) {
+            if matrix.get_elem(source_row, col) {
+                // Move this row to its correct location (target_row)
+                matrix.swap_rows(source_row, target_row);
 
-		// Look for a leading 1 in this column
-		for source_row in (target_row..matrix.nrows()) {
-			if matrix.get_elem(source_row, col) {
+                // Eliminate any remaining 1s below this one in the column by XORing
+                for other_row in ((source_row + 1)..matrix.nrows()) {
+                    if matrix.get_elem(other_row, col) {
+                        matrix.xor_update_row(target_row, other_row);
+                    }
+                }
 
-				// Move this row to its correct location (target_row)
-				matrix.swap_rows(source_row, target_row);
-
-				// Eliminate any remaining 1s below this one in the column by XORing
-				for other_row in ((source_row+1)..matrix.nrows()) {
-					if matrix.get_elem(other_row, col) {
-						matrix.xor_update_row(target_row, other_row);
-					}
-				}
-
-				target_row += 1; // done with this target_row
-				break;           // also done with this column
-			}
-		}
-		// (invariant: elements with row >= target_row,  col < leading_col are 0)
-	}
+                target_row += 1; // done with this target_row
+                break; // also done with this column
+            }
+        }
+        // (invariant: elements with row >= target_row,  col < leading_col are 0)
+    }
 }
 
 #[cfg(test)]
 fn gen_test_matrix() -> Bitmatrix {
-	// Test a specific matrix
-	// [1, 0, 0, 0] {0}       [1, 0, 0, 0] {0}
-	// [1, 1, 1, 0] {1}  ref  [0, 1, 1, 0] {0,1}
-	// [1, 1, 1, 0] {2} ----> [0, 0, 1, 1] {1,3}
-	// [1, 1, 0, 1] {3}       [0, 0, 0, 0] {1,2} \ interchangeable
-	// [1, 0, 0, 0] {4}       [0, 0, 0, 0] {0,4} /      rows
-	Bitmatrix { rows: vec![
-		Bitvec::from_vecs(vec![0],     vec![0]),
-		Bitvec::from_vecs(vec![0,1,2], vec![1]),
-		Bitvec::from_vecs(vec![0,1,2], vec![2]),
-		Bitvec::from_vecs(vec![0,1,3], vec![3]),
-		Bitvec::from_vecs(vec![0],     vec![4]),
-	], width: 4}
+    // Test a specific matrix
+    // [1, 0, 0, 0] {0}       [1, 0, 0, 0] {0}
+    // [1, 1, 1, 0] {1}  ref  [0, 1, 1, 0] {0,1}
+    // [1, 1, 1, 0] {2} ----> [0, 0, 1, 1] {1,3}
+    // [1, 1, 0, 1] {3}       [0, 0, 0, 0] {1,2} \ interchangeable
+    // [1, 0, 0, 0] {4}       [0, 0, 0, 0] {0,4} /      rows
+    Bitmatrix {
+        rows: vec![
+            Bitvec::from_vecs(vec![0], vec![0]),
+            Bitvec::from_vecs(vec![0, 1, 2], vec![1]),
+            Bitvec::from_vecs(vec![0, 1, 2], vec![2]),
+            Bitvec::from_vecs(vec![0, 1, 3], vec![3]),
+            Bitvec::from_vecs(vec![0], vec![4]),
+        ],
+        width: 4,
+    }
 }
 
 #[test]
 fn test_row_swap() {
-	let original   = gen_test_matrix();
-	let mut actual = original.clone();
+    let original = gen_test_matrix();
+    let mut actual = original.clone();
 
-	actual.swap_rows(1,1);
-	assert_eq!(actual, original);
+    actual.swap_rows(1, 1);
+    assert_eq!(actual, original);
 
-	actual.swap_rows(1,3);
-	let expected = Bitmatrix { rows: vec![
-		Bitvec::from_vecs(vec![0],     vec![0]),
-		Bitvec::from_vecs(vec![0,1,3], vec![3]), // changed
-		Bitvec::from_vecs(vec![0,1,2], vec![2]),
-		Bitvec::from_vecs(vec![0,1,2], vec![1]), // changed
-		Bitvec::from_vecs(vec![0],     vec![4]),
-	], width: 4};
-	assert_eq!(actual, expected);
+    actual.swap_rows(1, 3);
+    let expected = Bitmatrix {
+        rows: vec![
+            Bitvec::from_vecs(vec![0], vec![0]),
+            Bitvec::from_vecs(vec![0, 1, 3], vec![3]), // changed
+            Bitvec::from_vecs(vec![0, 1, 2], vec![2]),
+            Bitvec::from_vecs(vec![0, 1, 2], vec![1]), // changed
+            Bitvec::from_vecs(vec![0], vec![4]),
+        ],
+        width: 4,
+    };
+    assert_eq!(actual, expected);
 }
 
 #[test]
 fn test_row_xor() {
-	let original   = gen_test_matrix();
-	let mut actual = original.clone();
+    let original = gen_test_matrix();
+    let mut actual = original.clone();
 
-	actual.xor_update_row(1,3);
-	let expected = Bitmatrix { rows: vec![
-		Bitvec::from_vecs(vec![0],     vec![0]),
-		Bitvec::from_vecs(vec![0,1,2], vec![1]),
-		Bitvec::from_vecs(vec![0,1,2], vec![2]),
-		Bitvec::from_vecs(vec![2,3],   vec![1,3]), // changed
-		Bitvec::from_vecs(vec![0],     vec![4]),
-	], width: 4};
-	assert_eq!(actual, expected);
+    actual.xor_update_row(1, 3);
+    let expected = Bitmatrix {
+        rows: vec![
+            Bitvec::from_vecs(vec![0], vec![0]),
+            Bitvec::from_vecs(vec![0, 1, 2], vec![1]),
+            Bitvec::from_vecs(vec![0, 1, 2], vec![2]),
+            Bitvec::from_vecs(vec![2, 3], vec![1, 3]), // changed
+            Bitvec::from_vecs(vec![0], vec![4]),
+        ],
+        width: 4,
+    };
+    assert_eq!(actual, expected);
 
-	actual.xor_update_row(1,3);
-	assert_eq!(actual, original);
+    actual.xor_update_row(1, 3);
+    assert_eq!(actual, original);
 }
 
 #[test]
 fn test_bit_marix_to_ref() {
-	let mut actual = gen_test_matrix();
+    let mut actual = gen_test_matrix();
 
-	bit_matrix_to_ref(&mut actual);
+    bit_matrix_to_ref(&mut actual);
 
-	let expected = Bitmatrix { rows: vec![
-		Bitvec::from_vecs(vec![0],   vec![0]),
-		Bitvec::from_vecs(vec![1,2], vec![0,1]),
-		Bitvec::from_vecs(vec![2,3], vec![1,3]),
-		Bitvec::from_vecs(vec![],    vec![1,2]),
-		Bitvec::from_vecs(vec![],    vec![0,4]),
-	], width: 4};
+    let expected = Bitmatrix {
+        rows: vec![
+            Bitvec::from_vecs(vec![0], vec![0]),
+            Bitvec::from_vecs(vec![1, 2], vec![0, 1]),
+            Bitvec::from_vecs(vec![2, 3], vec![1, 3]),
+            Bitvec::from_vecs(vec![], vec![1, 2]),
+            Bitvec::from_vecs(vec![], vec![0, 4]),
+        ],
+        width: 4,
+    };
 
-	// This test is a bit strict as there can be many valid REF forms.
-	// It's mostly to double check that the algorithm is doing what I think it's
-	//  doing (i.e. no silly typos)
-	assert_eq!(actual, expected);
+    // This test is a bit strict as there can be many valid REF forms.
+    // It's mostly to double check that the algorithm is doing what I think it's
+    //  doing (i.e. no silly typos)
+    assert_eq!(actual, expected);
 }
