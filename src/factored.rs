@@ -7,7 +7,7 @@
 // to those terms.
 
 use std::default::Default;
-use std::ops::Mul;
+use std::ops::{Mul, Div, MulAssign, DivAssign};
 use std::cmp::{min,max};
 use std::collections::BTreeMap;
 
@@ -260,6 +260,33 @@ where
         }
     */
 
+    /// Divide by another factorized value.
+    ///
+    /// Cannot produce fractional values.
+    ///
+    /// # Example:
+    ///
+    /// ```
+    /// use factor::factorize;
+    ///
+    /// assert_eq!(factorize(15u64).checked_div(factorize(5u64)), Some(factorize(3u64)));
+    /// assert_eq!(factorize(15u64).checked_div(factorize(2u64)), None);
+    /// ```
+    pub fn checked_div(&self, other: impl FactorExt<X>) -> Option<Factored<X>>
+    where
+        X: Clone,
+    {
+        let mut result = self.clone();
+        for (k, v) in other {
+            let current = result.get(&k);
+            match current.checked_sub(v) {
+                Some(v) => result.set(k.clone(), v),
+                None => return None,
+            }
+        }
+        Some(result)
+    }
+
     /// Iterate over unique prime factors.
     ///
     /// Item type is `&X`.
@@ -272,13 +299,6 @@ where
     /// Item type is `(&X, usize)`.
     pub fn iter(&self) -> Iter<'_, X> {
         self.powers.iter()
-    }
-
-    /// Consume to iterate over the `(prime, power)` pairs.
-    ///
-    /// Item type is `(X, usize)`.
-    pub fn into_iter(self) -> IntoIter<X> {
-        self.powers.into_iter()
     }
 
     /// Immutably borrow the underlying map.
@@ -340,7 +360,7 @@ where
     fn mul(self, other: Self) -> Self {
         let mut result = self;
         for (k, v) in other.powers.into_iter() {
-            let current = result.get(&k); // owned proxy
+            let current = result.get(&k);
             result.set(k.clone(), current + v);
         }
         result
@@ -354,6 +374,14 @@ where
     fn product<I: Iterator<Item=Factored<X>>>(iter: I) -> Self {
         iter.fold(Default::default(), |acc, x| acc * x)
     }
+}
+
+impl<X: Ord> IntoIterator for Factored<X>
+{
+    type Item = (X, usize);
+    type IntoIter = IntoIter<X>;
+
+    fn into_iter(self) -> Self::IntoIter { self.powers.into_iter() }
 }
 
 //------------------------------------
