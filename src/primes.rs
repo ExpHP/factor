@@ -15,9 +15,9 @@ use num::BigUint;
 #[cfg(test)]
 use test::Bencher;
 
-use util::literal;
-use util::mod_pow;
-use util::MoreNumCast;
+use crate::util::literal;
+use crate::util::mod_pow;
+use crate::util::MoreNumCast;
 
 pub trait PrimeTester<T>
 where

@@ -15,12 +15,12 @@ use std::marker::PhantomData;
 use num;
 use num::{Zero, One, Integer};
 
-use util::isqrt;
-use util::literal;
-use util::MoreNumCast;
-use ::Factored;
-use primes::PrimeTester;
-use iter_ext::FactorExt;
+use crate::util::isqrt;
+use crate::util::literal;
+use crate::util::MoreNumCast;
+use crate::Factored;
+use crate::primes::PrimeTester;
+use crate::iter_ext::FactorExt;
 
 mod sieve;
 mod dixon;
@@ -108,7 +108,7 @@ pub mod helper {
 
     use num::{Zero, One, Integer};
 
-    use ::Factored;
+    use crate::Factored;
 
     /// The default implementation of `TryFactor::factorize`.
     ///
@@ -358,18 +358,18 @@ mod tests {
     use num::{Zero, One, Integer, ToPrimitive};
     use test::Bencher;
 
-    use util::literal;
-    use util::MoreNumCast;
-    use primes::PrimeSieve;
-    use primes::MillerRabin;
+    use crate::util::literal;
+    use crate::util::MoreNumCast;
+    use crate::primes::PrimeSieve;
+    use crate::primes::MillerRabin;
 
     use self::list_factorizer::ListFactorizer;
     mod list_factorizer {
         use ::num;
         use ::num::Integer;
-        use util::MoreNumCast;
-        use factorizer::TryFactor;
-        use factorizer::SureFactor;
+        use crate::util::MoreNumCast;
+        use crate::factorizer::TryFactor;
+        use crate::factorizer::SureFactor;
 
         // FIXME this shouldn't exist except maybe for testing purposes.
         //       FactorSieve is the way to go.
@@ -547,7 +547,7 @@ mod tests {
 
     #[bench]
     fn bench_factors_construction(b: &mut Bencher) {
-        let sieve = ::factorizer::FactorSieve::new(10000u64);
+        let sieve = crate::factorizer::FactorSieve::new(10000u64);
         b.iter(|| {
             (1..10000)
                 .map(|x| sieve.factorize(x).iter().count())
@@ -557,11 +557,11 @@ mod tests {
 
     #[bench]
     fn bench_factors_product(b: &mut Bencher) {
-        let sieve = ::factorizer::FactorSieve::new(10000u64);
+        let sieve = crate::factorizer::FactorSieve::new(10000u64);
         b.iter(|| {
             (3000..4000)
                 .map(|x| sieve.factorize(x))
-                .fold(::Factored::<u64>::one(), |a, b| a * b)
+                .fold(crate::Factored::<u64>::one(), |a, b| a * b)
         });
     }
 

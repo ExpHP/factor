@@ -15,7 +15,7 @@ use num;
 use num::{One,FromPrimitive};
 use num::Num;
 
-use ::FactorExt;
+use crate::FactorExt;
 
 /// An integer stored as its prime factorization.
 ///

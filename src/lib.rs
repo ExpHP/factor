@@ -31,28 +31,28 @@ mod util;
 mod factored;
 pub mod prelude;
 
-pub use primes::PrimeTester;
-pub use primes::PrimeSieve;
-pub use factorizer::FactorSieve;
+pub use crate::primes::PrimeTester;
+pub use crate::primes::PrimeSieve;
+pub use crate::factorizer::FactorSieve;
 //pub use factorizer::FermatFactorizer;
 //pub use factorizer::Dixon; // FIXME broken, has disabled tests
-pub use util::isqrt;
-pub use util::gcd;
-pub use factored::Factored;
+pub use crate::util::isqrt;
+pub use crate::util::gcd;
+pub use crate::factored::Factored;
 
 // Type-Synonyms, for semantic purposes.
 // (NOTE: alas, the docstrings don't appear to take effect)
 /// A deterministic `TryFactor` that is guaranteed to work on any number, but may be fast.
-pub use factorizer::TrialDivision as SafeFactorizer;
+pub use crate::factorizer::TrialDivision as SafeFactorizer;
 /// The `TryFactor` used by the `factor::factorize` method.
-pub use factorizer::TrialDivision as DefaultFactorizer;
+pub use crate::factorizer::TrialDivision as DefaultFactorizer;
 
-use util::literal;
-use util::MoreNumCast;
+use crate::util::literal;
+use crate::util::MoreNumCast;
 
 use std::iter::FromIterator;
 use std::ops::Shr;
-use prelude::*;
+use crate::prelude::*;
 
 use num::{Zero,One,Integer};
 

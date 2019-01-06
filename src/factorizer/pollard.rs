@@ -19,13 +19,13 @@ use num::bigint::{BigInt, RandBigInt};
 use rand::distributions::uniform::SampleUniform;
 use rand::FromEntropy;
 
-use factorize;
-use Factored;
-use prelude::*;
-use util::literal;
-use util::gcd;
-use util::mod_pow;
-use util::MoreNumCast;
+use crate::factorize;
+use crate::Factored;
+use crate::prelude::*;
+use crate::util::literal;
+use crate::util::gcd;
+use crate::util::mod_pow;
+use crate::util::MoreNumCast;
 
 // PollardBrentBigInt is a hack because BigInt does not
 //  satisfy SampleUniform (it has its own trait which takes by ref >_>)

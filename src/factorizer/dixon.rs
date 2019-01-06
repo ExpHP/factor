@@ -15,10 +15,10 @@ use rand::FromEntropy;
 use rand::distributions::uniform::SampleUniform;
 use bit_set::BitSet;
 
-use factorize;
-use Factored;
-use prelude::*;
-use util::{isqrt,gcd,MoreNumCast};
+use crate::factorize;
+use crate::Factored;
+use crate::prelude::*;
+use crate::util::{isqrt,gcd,MoreNumCast};
 
 pub struct Dixon<T>
 where

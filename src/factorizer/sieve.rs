@@ -7,9 +7,9 @@
 // to those terms.
 
 use num::{Zero, One, Integer};
-use prelude::*;
-use ::Factored;
-use util::MoreNumCast;
+use crate::prelude::*;
+use crate::Factored;
+use crate::util::MoreNumCast;
 
 /// An object for efficiently factorizing many small numbers.
 ///
@@ -57,7 +57,7 @@ where
     T: Clone + Zero + One + Integer + MoreNumCast,
 {
     fn factorize(&self, x: T) -> Factored<T> {
-        ::factorizer::helper::always_smallest_factorize(self, x)
+        crate::factorizer::helper::always_smallest_factorize(self, x)
     }
 }
 
