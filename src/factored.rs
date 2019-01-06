@@ -277,14 +277,22 @@ where
         X: Clone,
     {
         let mut result = self.clone();
+        result.checked_div_assign(other)?;
+        Some(result)
+    }
+
+    fn checked_div_assign(&mut self, other: impl FactorExt<X>) -> Option<()>
+    where
+        X: Clone,
+    {
         for (k, v) in other {
-            let current = result.get(&k);
+            let current = self.get(&k);
             match current.checked_sub(v) {
-                Some(v) => result.set(k.clone(), v),
+                Some(v) => self.set(k.clone(), v),
                 None => return None,
             }
         }
-        Some(result)
+        Some(())
     }
 
     /// Iterate over unique prime factors.
@@ -357,13 +365,43 @@ where
     X: Ord + Clone,
 {
     type Output = Self;
-    fn mul(self, other: Self) -> Self {
-        let mut result = self;
+
+    fn mul(mut self, other: Self) -> Self {
+        self *= other;
+        self
+    }
+}
+
+impl<X> Div<Factored<X>> for Factored<X>
+where
+    X: Ord + Clone,
+{
+    type Output = Self;
+
+    fn div(mut self, other: Self) -> Self {
+        self /= other;
+        self
+    }
+}
+
+impl<X> MulAssign<Factored<X>> for Factored<X>
+where
+    X: Ord + Clone,
+{
+    fn mul_assign(&mut self, other: Self) {
         for (k, v) in other.powers.into_iter() {
-            let current = result.get(&k);
-            result.set(k.clone(), current + v);
+            let current = self.get(&k);
+            self.set(k.clone(), current + v);
         }
-        result
+    }
+}
+
+impl<X> DivAssign<Factored<X>> for Factored<X>
+where
+    X: Ord + Clone,
+{
+    fn div_assign(&mut self, other: Self) {
+        self.checked_div_assign(other).expect("divisor does not evenly divide into self!");
     }
 }
 
